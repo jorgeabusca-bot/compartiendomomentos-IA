@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Asociados - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="hero" style="padding: 40px 20px; margin-bottom: 30px;">
+        <h1><i class="fas fa-users"></i> Nuestros Asociados</h1>
+        <p>Conoce a las personas que forman parte de nuestra comunidad</p>
+        {% if session.get('tipo') == 'abonado' %}
+            <p style="font-size: 0.9rem; opacity: 0.8;"><i class="fas fa-star"></i> Como abonado, puedes ver los perfiles completos de todos los asociados</p>
+        {% else %}
+            <p style="font-size: 0.9rem; opacity: 0.8;"><i class="fas fa-crown"></i> <a href="{{ url_for('registro') }}" style="color: #ffd700;">¡Hazte abonado</a> para espiar y conocer mejor a los demás!</p>
+        {% endif %}
+    </div>
+
+    {% if usuarios %}
+    <div class="asociados-grid">
+        {% for u in usuarios %}
+        <div class="asociado-card" onclick="window.location.href='{{ url_for('ver_perfil', username=u.username) }}'">
+            <div class="asociado-avatar">
+                {% if u.foto_perfil %}
+                    <img src="{{ url_for('uploaded_file', filename=u.foto_perfil) }}" alt="{{ u.nombre }}">
+                {% else %}
+                    <i class="fas fa-user"></i>
+                {% endif %}
+            </div>
+            <h3>{{ u.nombre }}</h3>
+            <p style="color: var(--text-light); font-size: 0.9rem;">@{{ u.username }}</p>
+            <span class="rol-badge {{ u.rol|lower|replace(' ', '-') }}">
+                {{ u.rol }}
+            </span>
+            <div class="asociado-stats">
+                <span><i class="fas fa-star" style="color: var(--argentina-sun);"></i> {{ u.puntaje }} pts</span>
+                {% if u.tipo == 'abonado' %}
+                    <span class="abonado"><i class="fas fa-crown"></i> Abonado</span>
+                {% else %}
+                    <span style="color: var(--secondary);"><i class="fas fa-user"></i> Gratis</span>
+                {% endif %}
+            </div>
+            {% if u.fotos and u.fotos|length > 0 %}
+                <p style="font-size: 0.85rem; color: var(--text-light);">
+                    <i class="fas fa-images"></i> {{ u.fotos|length }} foto(s)
+                </p>
+            {% endif %}
+            <p style="font-size: 0.8rem; color: var(--argentina-celeste); margin-top: 10px;">
+                <i class="fas fa-mouse-pointer"></i> Clic para ver perfil
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <h3>No hay asociados registrados</h3>
+        <p>¡Sé el primero en unirte a nuestra comunidad!</p>
+        <a href="{{ url_for('registro') }}" class="btn btn-primary">Registrarse</a>
+    </div>
+    {% endif %}
+
+    {% if session.get('tipo') == 'abonado' %}
+    <div class="admin-section" style="margin-top: 40px; text-align: center;">
+        <h3><i class="fas fa-star"></i> Sistema de Puntaje</h3>
+        <p>Como usuario abonado, puedes asignar puntos a otros asociados para ayudarlos a subir de rango:</p>
+        <ul style="text-align: left; max-width: 500px; margin: 20px auto;">
+            <li><strong>20 puntos:</strong> Pasan a ser Coordinadores</li>
+            <li><strong>50 puntos:</strong> Pasan a ser Coordinadores Principales</li>
+            <li><strong>100 puntos:</strong> Pasan a ser Coordinadores Generales</li>
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

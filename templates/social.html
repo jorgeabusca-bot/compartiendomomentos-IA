@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Social - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="hero" style="padding: 40px 20px; margin-bottom: 30px;">
+        <h1><i class="fas fa-comments"></i> Social - Conoce Gente</h1>
+        <p>Explora perfiles, mira fotos y conecta con otros miembros de la comunidad</p>
+        {% if not puede_ver_detalles %}
+        <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 15px;">
+            <i class="fas fa-crown" style="color: var(--gold);"></i> 
+            <a href="{{ url_for('registro') }}" style="color: #ffd700;">¡Hazte abonado</a> para ver todos los perfiles completos y sus fotos!
+        </p>
+        {% endif %}
+    </div>
+
+    {% if usuarios %}
+    <div class="social-grid">
+        {% for u in usuarios %}
+        <div class="social-card" onclick="window.location.href='{{ url_for('ver_perfil', username=u.username) }}'">
+            <div class="social-card-image">
+                {% if u.foto_perfil %}
+                    <img src="{{ url_for('uploaded_file', filename=u.foto_perfil) }}" alt="{{ u.nombre }}">
+                {% else %}
+                    <div class="social-card-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+                {% if u.tipo == 'abonado' %}
+                    <span class="social-abonado-badge"><i class="fas fa-crown"></i></span>
+                {% endif %}
+            </div>
+            <div class="social-card-content">
+                <h3>{{ u.nombre }}</h3>
+                <p class="social-username">@{{ u.username }}</p>
+                <span class="rol-badge {{ u.rol|lower|replace(' ', '-') }}">
+                    {{ u.rol }}
+                </span>
+                {% if u.descripcion %}
+                    <p class="social-desc">{{ u.descripcion[:80] }}{% if u.descripcion|length > 80 %}...{% endif %}</p>
+                {% endif %}
+                <div class="social-stats">
+                    <span><i class="fas fa-star"></i> {{ u.puntaje }}</span>
+                    {% if u.fotos and u.fotos|length > 0 %}
+                        <span><i class="fas fa-images"></i> {{ u.fotos|length }}</span>
+                    {% endif %}
+                </div>
+                {% if puede_ver_detalles %}
+                    <button class="btn btn-secondary btn-small" style="margin-top: 10px;">
+                        <i class="fas fa-eye"></i> Ver Perfil Completo
+                    </button>
+                {% else %}
+                    <button class="btn btn-primary btn-small" style="margin-top: 10px;">
+                        <i class="fas fa-lock"></i> Solo Abonados
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-user-friends"></i>
+        <h3>No hay otros miembros todavía</h3>
+        <p>¡Sé el primero en explorar la comunidad!</p>
+    </div>
+    {% endif %}
+
+    {% if puede_ver_detalles %}
+    <div class="admin-section" style="margin-top: 40px; text-align: center; background: linear-gradient(135deg, var(--argentina-celeste) 0%, var(--white) 100%); color: var(--black);">
+        <h3><i class="fas fa-crown" style="color: var(--gold);"></i> Ventajas de ser Abonado</h3>
+        <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 20px;">
+            <div style="flex: 1; min-width: 200px;">
+                <i class="fas fa-eye" style="font-size: 2rem; color: var(--argentina-celeste); margin-bottom: 10px;"></i>
+                <p>Ver perfiles completos</p>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <i class="fas fa-images" style="font-size: 2rem; color: var(--argentina-celeste); margin-bottom: 10px;"></i>
+                <p>Ver galerías de fotos</p>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <i class="fas fa-camera" style="font-size: 2rem; color: var(--argentina-celeste); margin-bottom: 10px;"></i>
+                <p>Subir tus propias fotos</p>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <i class="fas fa-star" style="font-size: 2rem; color: var(--argentina-celeste); margin-bottom: 10px;"></i>
+                <p>Dar puntaje a otros</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.social-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    margin: 30px 0;
+}
+
+.social-card {
+    background: var(--white);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+    cursor: pointer;
+    border-top: 4px solid var(--argentina-celeste);
+}
+
+.social-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.social-card-image {
+    position: relative;
+    height: 200px;
+    background: linear-gradient(135deg, var(--argentina-celeste) 0%, var(--argentina-sun) 100%);
+    overflow: hidden;
+}
+
+.social-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.social-card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.social-card-placeholder i {
+    font-size: 5rem;
+    color: rgba(255,255,255,0.5);
+}
+
+.social-abonado-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--gold);
+    color: var(--black);
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.social-card-content {
+    padding: 20px;
+    text-align: center;
+}
+
+.social-card-content h3 {
+    color: var(--black);
+    margin-bottom: 5px;
+}
+
+.social-username {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+}
+
+.social-desc {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin: 10px 0;
+    line-height: 1.4;
+}
+
+.social-stats {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.social-stats span {
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.social-stats i {
+    color: var(--argentina-celeste);
+    margin-right: 5px;
+}
+
+@media (max-width: 768px) {
+    .social-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

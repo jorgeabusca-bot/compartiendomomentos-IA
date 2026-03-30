@@ -1,0 +1,944 @@
+:root {
+    --primary: #74ACDF;
+    --primary-dark: #5B9CC4;
+    --secondary: #ffffff;
+    --secondary-light: #E8F4FC;
+    --black: #1a1a1a;
+    --background: #f5f5f5;
+    --white: #ffffff;
+    --text: #333333;
+    --text-light: #666666;
+    --success: #4caf50;
+    --warning: #FTCB05;
+    --error: #f44336;
+    --gold: #FTCB05;
+    --argentina-celeste: #74ACDF;
+    --argentina-sun: #FTCB05;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--background);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+
+/* HEADER */
+header {
+    background: linear-gradient(135deg, var(--argentina-celeste) 0%, var(--white) 100%);
+    color: var(--black);
+    padding: 0.8rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.15);
+    border-bottom: 3px solid var(--argentina-sun);
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.logo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo i { font-size: 1.5rem; color: var(--argentina-celeste); }
+.logo span { color: var(--black); }
+
+nav { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+
+nav a {
+    color: var(--black);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+nav a:hover { 
+    background: rgba(116,172,223,0.2);
+    color: var(--argentina-celeste);
+}
+
+.abonado-badge, .gratuito-badge {
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.abonado-badge { background: var(--gold); color: var(--black); }
+.gratuito-badge { background: var(--argentina-celeste); color: var(--black); }
+
+.btn-register, .btn-logout {
+    background: var(--argentina-sun);
+    color: var(--black);
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-register:hover, .btn-logout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(254,203,5,0.4);
+}
+
+/* HERO */
+.hero {
+    background: linear-gradient(135deg, var(--argentina-celeste) 0%, var(--white) 100%);
+    color: var(--black);
+    padding: 60px 15px;
+    text-align: center;
+    border-bottom: 4px solid var(--argentina-sun);
+}
+
+.hero h1 { font-size: 2rem; margin-bottom: 15px; font-weight: 700; }
+.hero p { font-size: 1rem; margin-bottom: 25px; opacity: 0.85; }
+
+/* BOTONES MEJORADOS */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn i { font-size: 1rem; }
+
+.btn-primary { 
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--primary-dark)); 
+    color: var(--white); 
+    box-shadow: 0 4px 15px rgba(116,172,223,0.3);
+}
+.btn-primary:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 8px 25px rgba(116,172,223,0.5);
+}
+
+.btn-secondary { 
+    background: linear-gradient(135deg, var(--argentina-sun), #e0b000); 
+    color: var(--black); 
+    box-shadow: 0 4px 15px rgba(254,203,5,0.3);
+}
+.btn-secondary:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 8px 25px rgba(254,203,5,0.5);
+}
+
+.btn-danger { 
+    background: linear-gradient(135deg, var(--error), #d32f2f); 
+    color: var(--white); 
+}
+.btn-danger:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 8px 25px rgba(244,67,54,0.4);
+}
+
+.btn-dark { 
+    background: var(--black); 
+    color: var(--white); 
+}
+
+.btn-block { display: flex; width: 100%; }
+.btn-small { padding: 8px 18px; font-size: 0.85rem; }
+.btn-large { padding: 15px 35px; font-size: 1.1rem; }
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* GRIDS */
+.eventos-grid, .asociados-grid, .social-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin: 25px 0;
+}
+
+/* TARJETA EVENTO */
+.evento-card {
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(116,172,223,0.2);
+}
+
+.evento-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+}
+
+.evento-image {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+}
+
+.evento-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.evento-card:hover .evento-image img {
+    transform: scale(1.05);
+}
+
+.evento-header { 
+    padding: 15px;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.evento-tipo {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.evento-tipo.gratis { background: var(--success); color: var(--white); }
+.evento-tipo.abonado { background: var(--argentina-sun); color: var(--black); }
+
+.descuento {
+    background: var(--argentina-celeste);
+    color: var(--white);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.evento-fotos-count {
+    background: rgba(0,0,0,0.7);
+    color: var(--white);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+}
+
+.evento-card h3 { 
+    padding: 0 15px 10px; 
+    color: var(--black);
+    font-size: 1.1rem;
+}
+
+.evento-desc { 
+    padding: 0 15px; 
+    color: var(--text-light); 
+    font-size: 0.9rem;
+    flex-grow: 1;
+}
+
+.evento-info { 
+    padding: 12px 15px; 
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.evento-info p { 
+    color: var(--text-light); 
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.evento-info i { color: var(--argentina-celeste); }
+
+.evento-card form, .evento-card > .btn { 
+    margin: 0 15px 15px;
+    padding: 10px;
+}
+
+/* TARJETA ASOCIADO */
+.asociado-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 25px 20px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s;
+    cursor: pointer;
+    border: 1px solid rgba(116,172,223,0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.asociado-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    border-color: var(--argentina-sun);
+}
+
+.asociado-avatar {
+    width: 90px;
+    height: 90px;
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--argentina-sun));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    overflow: hidden;
+    border: 3px solid var(--white);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.asociado-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.asociado-avatar i { font-size: 2.5rem; color: var(--white); }
+
+.rol-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 8px 0;
+}
+
+.rol-badge.coordinador-general { background: linear-gradient(135deg, var(--gold), #ffaa00); color: var(--black); }
+.rol-badge.coordinador-principal { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: var(--black); }
+.rol-badge.coordinador { background: linear-gradient(135deg, #cd7f32, #a06020); color: var(--white); }
+.rol-badge.socio { background: linear-gradient(135deg, var(--argentina-celeste), var(--primary-dark)); color: var(--white); }
+
+.asociado-stats { 
+    display: flex; 
+    justify-content: center; 
+    gap: 15px; 
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.asociado-stats span { 
+    font-size: 0.85rem; 
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.asociado-stats span.abonado { color: var(--argentina-sun); font-weight: 600; }
+
+/* SOCIAL */
+.social-card {
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s;
+    cursor: pointer;
+    border: 1px solid rgba(116,172,223,0.2);
+}
+
+.social-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+}
+
+.social-card-image {
+    position: relative;
+    height: 180px;
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--argentina-sun));
+    overflow: hidden;
+}
+
+.social-card-image img { width: 100%; height: 100%; object-fit: cover; }
+
+.social-card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.social-card-placeholder i { font-size: 4rem; color: rgba(255,255,255,0.5); }
+
+.social-abonado-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--gold);
+    color: var(--black);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.social-card-content { padding: 15px; text-align: center; }
+.social-card-content h3 { color: var(--black); margin-bottom: 5px; font-size: 1.1rem; }
+.social-username { color: var(--text-light); font-size: 0.85rem; margin-bottom: 8px; }
+.social-desc { color: var(--text-light); font-size: 0.85rem; margin: 8px 0; line-height: 1.4; }
+
+.social-stats {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.social-stats span { font-size: 0.85rem; color: var(--text-light); display: flex; align-items: center; gap: 4px; }
+.social-stats i { color: var(--argentina-celeste); }
+
+/* FORMULARIOS */
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--text); }
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
+    outline: none; 
+    border-color: var(--argentina-celeste); 
+}
+
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+.checkbox-group { display: flex; align-items: center; gap: 10px; }
+.checkbox-group input { width: auto; }
+
+/* AUTH */
+.auth-container { min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 30px 15px; }
+.auth-card { 
+    background: var(--white); 
+    padding: 35px 30px; 
+    border-radius: 20px; 
+    box-shadow: 0 15px 50px rgba(0,0,0,0.1); 
+    width: 100%; 
+    max-width: 420px;
+    border-top: 5px solid var(--argentina-celeste);
+}
+.auth-card h2 { text-align: center; margin-bottom: 25px; color: var(--black); font-size: 1.5rem; }
+.auth-card h2 i { color: var(--argentina-celeste); }
+.auth-link { text-align: center; margin-top: 18px; color: var(--text-light); }
+.auth-link a { color: var(--argentina-celeste); font-weight: 600; }
+
+/* ALERTS */
+.alert { 
+    padding: 14px 18px; 
+    border-radius: 12px; 
+    margin: 15px 0; 
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.alert i { font-size: 1.2rem; }
+.alert-success { background: #d4edda; color: #155724; border-left: 4px solid var(--success); }
+.alert-error { background: #f8d7da; color: #721c24; border-left: 4px solid var(--error); }
+.alert-warning { background: #fff3cd; color: #856404; border-left: 4px solid var(--warning); }
+.alert-info { background: #d1ecf1; color: #0c5460; border-left: 4px solid var(--argentina-celeste); }
+
+/* SECCIONES */
+.section-title { 
+    text-align: center; 
+    margin: 35px 0 10px; 
+    color: var(--black); 
+    font-size: 1.5rem;
+}
+.section-title i { color: var(--argentina-celeste); margin-right: 8px; }
+.section-subtitle { text-align: center; color: var(--text-light); margin-bottom: 25px; font-size: 0.95rem; }
+
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text-light); }
+.empty-state i { font-size: 3.5rem; margin-bottom: 15px; opacity: 0.3; color: var(--argentina-celeste); }
+
+/* PERFIL */
+.perfil-card { 
+    background: var(--white); 
+    border-radius: 20px; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1); 
+    margin: 25px 0; 
+    overflow: hidden;
+}
+
+.perfil-header { 
+    display: flex; 
+    gap: 25px; 
+    align-items: center; 
+    padding: 30px;
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--white));
+    color: var(--black);
+}
+
+.perfil-avatar-container { position: relative; flex-shrink: 0; }
+
+.perfil-avatar {
+    width: 130px;
+    height: 130px;
+    background: linear-gradient(135deg, var(--argentina-sun), var(--argentina-celeste));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid var(--white);
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.perfil-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.perfil-avatar i { font-size: 4rem; color: var(--white); }
+
+.editar-perfil-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: var(--argentina-sun);
+    color: var(--black);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.editar-perfil-btn:hover { background: #e0b000; }
+
+.perfil-info h3 { font-size: 1.5rem; margin-bottom: 5px; }
+.perfil-email { opacity: 0.85; margin-top: 5px; font-size: 0.95rem; }
+.perfil-tipo { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.perfil-stats { 
+    display: flex; 
+    gap: 20px; 
+    padding: 20px 30px; 
+    background: #fafafa; 
+    border-bottom: 1px solid #eee;
+}
+
+.stat-item { text-align: center; flex: 1; }
+.stat-item i { font-size: 1.3rem; color: var(--argentina-celeste); margin-bottom: 5px; }
+.stat-value { display: block; font-size: 1.3rem; font-weight: 700; color: var(--black); }
+.stat-label { font-size: 0.8rem; color: var(--text-light); }
+
+.perfil-content { padding: 25px 30px; }
+
+.perfil-description { 
+    padding: 20px; 
+    background: #fafafa; 
+    border-radius: 12px; 
+    margin-bottom: 25px;
+}
+
+.perfil-description h4 { margin-bottom: 10px; color: var(--argentina-celeste); display: flex; align-items: center; gap: 8px; }
+.perfil-description i { color: var(--argentina-celeste); }
+
+/* CARRUSEL */
+.carousel-section { margin-top: 25px; }
+.carousel-section h4 { 
+    color: var(--black); 
+    margin-bottom: 15px; 
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.carousel-section h4 i { color: var(--argentina-celeste); }
+
+.carousel {
+    position: relative;
+    background: var(--argentina-celeste);
+    border-radius: 16px;
+    overflow: hidden;
+    height: 350px;
+}
+
+.carousel-slides {
+    display: flex;
+    height: 100%;
+    transition: transform 0.5s ease;
+}
+
+.carousel-slide {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--argentina-sun);
+    color: var(--black);
+    border: none;
+    padding: 12px 18px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    border-radius: 50%;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-nav:hover { background: #e0b000; transform: translateY(-50%) scale(1.1); }
+.carousel-nav.prev { left: 15px; }
+.carousel-nav.next { right: 15px; }
+
+.carousel-dots {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+}
+
+.carousel-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.carousel-dot.active { background: var(--argentina-sun); transform: scale(1.2); }
+
+.no-photos {
+    text-align: center;
+    padding: 50px 20px;
+    background: #fafafa;
+    border-radius: 16px;
+    color: var(--text-light);
+}
+
+.no-photos i { font-size: 2.5rem; margin-bottom: 12px; color: var(--argentina-celeste); }
+
+/* ADMIN */
+.admin-section { 
+    background: var(--white); 
+    border-radius: 16px; 
+    padding: 25px; 
+    margin: 25px 0; 
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    border-top: 4px solid var(--argentina-celeste);
+}
+.admin-section h3 { margin-bottom: 18px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.admin-section h3 i { color: var(--argentina-celeste); }
+
+.admin-eventos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    margin: 25px 0;
+}
+
+.admin-evento-card {
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
+}
+
+.admin-evento-header {
+    position: relative;
+    height: 160px;
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--argentina-sun));
+}
+
+.admin-evento-img { width: 100%; height: 100%; object-fit: cover; }
+.admin-evento-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.admin-evento-placeholder i { font-size: 3.5rem; color: rgba(255,255,255,0.3); }
+.admin-evento-overlay { position: absolute; top: 10px; right: 10px; }
+
+.admin-evento-body { padding: 18px; }
+.admin-evento-body h4 { color: var(--black); margin-bottom: 8px; font-size: 1.1rem; }
+.admin-evento-desc { color: var(--text-light); font-size: 0.85rem; margin-bottom: 12px; }
+
+.admin-evento-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.admin-evento-info span {
+    background: #f5f5f5;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.admin-evento-info i { color: var(--argentina-celeste); }
+
+.admin-evento-fotos { border-top: 1px solid #eee; padding-top: 12px; margin-top: 12px; }
+.admin-evento-fotos h5 { color: var(--black); margin-bottom: 8px; font-size: 0.95rem; }
+.admin-evento-fotos i { color: var(--argentina-celeste); margin-right: 5px; }
+
+.admin-fotos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.admin-foto-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.admin-foto-item img { width: 100%; height: 100%; object-fit: cover; }
+
+.admin-foto-delete {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    background: var(--error);
+    color: var(--white);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.admin-foto-item:hover .admin-foto-delete { opacity: 1; }
+
+.editar-perfil-btn i, .btn i { margin-right: 5px; }
+
+/* FOOTER */
+footer { 
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--white)); 
+    color: var(--black); 
+    padding: 40px 0 20px; 
+    margin-top: 50px;
+    border-top: 4px solid var(--argentina-sun);
+}
+
+.footer-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-bottom: 25px; }
+.footer-section h3, .footer-section h4 { margin-bottom: 12px; color: var(--argentina-celeste); }
+.footer-section a { display: block; color: var(--text); text-decoration: none; margin-bottom: 6px; transition: color 0.3s; }
+.footer-section a:hover { color: var(--argentina-sun); }
+.footer-bottom { text-align: center; padding-top: 18px; border-top: 1px solid #ddd; color: var(--text-light); font-size: 0.9rem; }
+
+/* OTROS */
+.locked-profile {
+    text-align: center;
+    padding: 50px 20px;
+    background: var(--white);
+    border-radius: 16px;
+    margin: 25px 0;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.locked-profile i { font-size: 3.5rem; color: var(--argentina-celeste); margin-bottom: 15px; }
+.locked-profile h3 { color: var(--black); margin-bottom: 8px; }
+.locked-profile p { color: var(--text-light); margin-bottom: 15px; }
+
+.photo-upload-area {
+    border: 3px dashed var(--argentina-celeste);
+    border-radius: 16px;
+    padding: 25px;
+    text-align: center;
+    margin: 15px 0;
+    transition: all 0.3s;
+    cursor: pointer;
+    background: #fafafa;
+}
+
+.photo-upload-area:hover {
+    border-color: var(--argentina-sun);
+    background: #fff;
+}
+
+.photo-upload-area i { font-size: 2rem; color: var(--argentina-celeste); margin-bottom: 8px; }
+.photo-upload-area p { color: var(--text-light); font-size: 0.9rem; }
+
+.photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.photo-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.photo-item img { width: 100%; height: 100%; object-fit: cover; }
+
+.photo-item .delete-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: var(--error);
+    color: var(--white);
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+}
+
+.photo-item:hover .delete-btn { opacity: 1; }
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    .hero h1 { font-size: 1.7rem; }
+    .eventos-grid, .asociados-grid, .social-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+    .admin-eventos-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    .container { padding: 0 12px; }
+    
+    header .container { flex-direction: column; gap: 10px; }
+    .logo { font-size: 1rem; }
+    nav { 
+        gap: 8px; 
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+    nav a { padding: 4px 8px; font-size: 0.8rem; }
+    
+    .hero { padding: 40px 15px; }
+    .hero h1 { font-size: 1.4rem; }
+    .hero p { font-size: 0.9rem; }
+    
+    .btn { padding: 10px 22px; font-size: 0.9rem; }
+    .btn-small { padding: 6px 14px; font-size: 0.8rem; }
+    
+    .eventos-grid, .asociados-grid, .social-grid { 
+        grid-template-columns: 1fr; 
+        gap: 20px;
+    }
+    
+    .perfil-header { flex-direction: column; text-align: center; padding: 25px 20px; }
+    .perfil-avatar { width: 110px; height: 110px; }
+    .perfil-stats { flex-wrap: wrap; gap: 15px; }
+    .stat-item { min-width: 80px; }
+    .perfil-content { padding: 20px; }
+    
+    .carousel { height: 250px; }
+    .carousel-nav { padding: 10px 14px; font-size: 1rem; }
+    
+    .admin-section { padding: 20px 15px; }
+    .admin-evento-header { height: 140px; }
+    
+    .auth-card { padding: 25px 20px; }
+    .form-row { grid-template-columns: 1fr; }
+    
+    .section-title { font-size: 1.3rem; }
+    
+    .evento-info { grid-template-columns: 1fr; }
+    .evento-image { height: 160px; }
+}
+
+@media (max-width: 480px) {
+    .container { padding: 0 10px; }
+    
+    .logo span { display: none; }
+    nav { gap: 5px; }
+    nav a { padding: 4px 6px; font-size: 0.75rem; }
+    
+    .btn-register, .btn-logout { padding: 6px 14px; font-size: 0.8rem; }
+    
+    .hero { padding: 30px 12px; }
+    .hero h1 { font-size: 1.2rem; }
+    
+    .perfil-avatar { width: 90px; height: 90px; }
+    .perfil-avatar i { font-size: 3rem; }
+    .perfil-info h3 { font-size: 1.2rem; }
+    
+    .stat-value { font-size: 1.1rem; }
+    
+    .carousel { height: 200px; border-radius: 12px; }
+    
+    .social-card-content { padding: 12px; }
+    
+    .admin-evento-body { padding: 12px; }
+    
+    .auth-card { padding: 20px 15px; }
+    
+    .photo-gallery { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+}
+
+/* ANIMACIONES */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.evento-card, .asociado-card, .social-card, .admin-evento-card {
+    animation: fadeIn 0.5s ease;
+}

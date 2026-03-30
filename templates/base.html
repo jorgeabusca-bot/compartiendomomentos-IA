@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CompartiendoMomentos.ar{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-heart"></i>
+                <span>CompartiendoMomentos.ar</span>
+            </div>
+            <nav>
+                <a href="{{ url_for('index') }}">Inicio</a>
+                <a href="{{ url_for('eventos') }}">Eventos</a>
+                <a href="{{ url_for('social') }}"><i class="fas fa-users"></i> Social</a>
+                <a href="{{ url_for('asociados') }}">Asociados</a>
+                {% if session.get('usuario') %}
+                    <a href="{{ url_for('perfil') }}">Mi Perfil</a>
+                    {% if session.get('rol') in ['Coordinador', 'Coordinador Principal', 'Coordinador General'] %}
+                        <a href="{{ url_for('admin_eventos') }}">Administrar</a>
+                    {% endif %}
+                    {% if session.get('tipo') == 'abonado' %}
+                        <span class="abonado-badge">ABONADO</span>
+                    {% else %}
+                        <span class="gratuito-badge">GRATIS</span>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar Sesión</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+                    <a href="{{ url_for('registro') }}" class="btn-register">Registrarse</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>CompartiendoMomentos.ar</h3>
+                    <p>Conectando personas que buscan compartir momentos especiales.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Enlaces Rápidos</h4>
+                    <a href="{{ url_for('index') }}">Inicio</a>
+                    <a href="{{ url_for('eventos') }}">Eventos</a>
+                    <a href="{{ url_for('asociados') }}">Asociados</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Contacto</h4>
+                    <p><i class="fas fa-envelope"></i> info@compartiendomomentos.ar</p>
+                    <p><i class="fas fa-phone"></i> +54 11 5555-1234</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 CompartiendoMomentos.ar - Todos los derechos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const carousel = document.querySelector('.carousel');
+        if (carousel) {
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const prevBtn = carousel.querySelector('.prev');
+            const nextBtn = carousel.querySelector('.next');
+            const dotsContainer = carousel.querySelector('.carousel-dots');
+            let currentSlide = 0;
+
+            function updateCarousel() {
+                carousel.querySelector('.carousel-slides').style.transform = `translateX(-${currentSlide * 100}%)`;
+                dotsContainer.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === currentSlide);
+                });
+            }
+
+            slides.forEach((_, i) => {
+                const dot = document.createElement('span');
+                dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                dot.onclick = () => { currentSlide = i; updateCarousel(); };
+                dotsContainer.appendChild(dot);
+            });
+
+            prevBtn.onclick = () => {
+                currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                updateCarousel();
+            };
+
+            nextBtn.onclick = () => {
+                currentSlide = (currentSlide + 1) % slides.length;
+                updateCarousel();
+            };
+        }
+    });
+    </script>
+</body>
+</html>

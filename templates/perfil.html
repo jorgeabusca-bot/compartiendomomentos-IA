@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{{ usuario.nombre }} - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if puede_ver_detalles == False and not es_propio %}
+    <div class="locked-profile">
+        <i class="fas fa-lock"></i>
+        <h3>Perfil Bloqueado</h3>
+        <p>Para ver los detalles y fotos de otros asociados, necesitas ser usuario Abonado.</p>
+        <a href="{{ url_for('registro') }}" class="btn btn-primary">Hazte Abonado</a>
+    </div>
+    {% else %}
+    <div class="perfil-card">
+        <div class="perfil-header">
+            <div class="perfil-avatar-container">
+                <div class="perfil-avatar">
+                    {% if usuario.foto_perfil %}
+                        <img src="{{ url_for('uploaded_file', filename=usuario.foto_perfil) }}" alt="{{ usuario.nombre }}">
+                    {% else %}
+                        <i class="fas fa-user"></i>
+                    {% endif %}
+                </div>
+                {% if es_propio %}
+                    <button class="editar-perfil-btn" onclick="window.location.href='{{ url_for('editar_perfil') }}'">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                {% endif %}
+            </div>
+            <div class="perfil-info">
+                <h3>{{ usuario.nombre }}</h3>
+                <p class="perfil-email"><i class="fas fa-user-tag"></i> @{{ usuario.username }}</p>
+                <p class="perfil-email"><i class="fas fa-envelope"></i> {{ usuario.email }}</p>
+                <div class="perfil-tipo">
+                    <span class="rol-badge {{ usuario.rol|lower|replace(' ', '-') }}">
+                        {{ usuario.rol }}
+                    </span>
+                    {% if usuario.tipo == 'abonado' %}
+                        <span class="abonado-badge">ABONADO</span>
+                    {% else %}
+                        <span class="gratuito-badge">GRATIS</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="perfil-stats">
+            <div class="stat-item">
+                <i class="fas fa-star"></i>
+                <span class="stat-value">{{ usuario.puntaje }}</span>
+                <span class="stat-label">Puntaje</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-calendar"></i>
+                <span class="stat-value">{{ usuario.get('fecha_registro', 'N/A') }}</span>
+                <span class="stat-label">Miembro desde</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-images"></i>
+                <span class="stat-value">{{ usuario.fotos|length if usuario.fotos else 0 }}</span>
+                <span class="stat-label">Fotos</span>
+            </div>
+        </div>
+
+        <div class="perfil-content">
+            {% if usuario.descripcion %}
+            <div class="perfil-description">
+                <h4><i class="fas fa-info-circle"></i> Sobre mí</h4>
+                <p>{{ usuario.descripcion }}</p>
+            </div>
+            {% endif %}
+
+            {% if puede_ver_detalles or es_propio %}
+            <div class="carousel-section">
+                <h4><i class="fas fa-camera-retro"></i> Galería de Fotos</h4>
+                
+                {% if usuario.fotos and usuario.fotos|length > 0 %}
+                <div class="carousel">
+                    <div class="carousel-slides">
+                        {% for foto in usuario.fotos %}
+                        <div class="carousel-slide">
+                            <img src="{{ url_for('uploaded_file', filename=foto) }}" alt="Foto {{ loop.index }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if usuario.fotos|length > 1 %}
+                    <button class="carousel-nav prev"><i class="fas fa-chevron-left"></i></button>
+                    <button class="carousel-nav next"><i class="fas fa-chevron-right"></i></button>
+                    <div class="carousel-dots"></div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="no-photos">
+                    <i class="fas fa-images"></i>
+                    <p>No hay fotos en la galería</p>
+                    {% if es_propio %}
+                    <a href="{{ url_for('editar_perfil') }}" class="btn btn-secondary">Agregar fotos</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="no-photos" style="background: #f5f5f5; color: #666; border-radius: 15px;">
+                <i class="fas fa-eye-slash"></i>
+                <p>Las fotos solo son visibles para usuarios abonados</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

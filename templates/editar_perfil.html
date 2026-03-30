@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Perfil - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-title">
+        <h1><i class="fas fa-user-edit"></i> Editar Mi Perfil</h1>
+        <p class="section-subtitle">Personaliza tu perfil y agrega fotos</p>
+    </div>
+
+    <div class="perfil-card">
+        <div class="perfil-content">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Nombre</label>
+                        <input type="text" name="nombre" value="{{ usuario.nombre }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" name="email" value="{{ usuario.email }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-info-circle"></i> Descripción (visible para todos)</label>
+                    <textarea name="descripcion" rows="4" placeholder="Cuéntanos sobre ti...">{{ usuario.descripcion or '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-camera"></i> Foto de Perfil</label>
+                    <div class="photo-upload-area">
+                        {% if usuario.foto_perfil %}
+                        <img src="{{ url_for('uploaded_file', filename=usuario.foto_perfil) }}" 
+                             alt="Foto de perfil actual" 
+                             style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
+                        <p>Ya tienes una foto de perfil. Selecciona otra para cambiarla.</p>
+                        {% else %}
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        {% endif %}
+                        <p><strong>Selecciona una imagen</strong></p>
+                        <input type="file" name="foto_perfil" accept="image/*" style="display: none;" id="foto_perfil_input">
+                    </div>
+                </div>
+
+                {% if usuario.tipo == 'abonado' %}
+                <div class="form-group">
+                    <label><i class="fas fa-images"></i> Fotos de la Galería (solo abonados)</label>
+                    <div class="photo-upload-area" onclick="document.getElementById('fotos_input').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p><strong>Selecciona múltiples fotos</strong></p>
+                        <p style="font-size: 0.85rem; color: #888;">Comparte fotos de salidas, eventos o momentos especiales</p>
+                        <input type="file" name="fotos" id="fotos_input" accept="image/*" multiple style="display: none;">
+                    </div>
+                    
+                    {% if usuario.fotos and usuario.fotos|length > 0 %}
+                    <div class="photo-gallery">
+                        {% for foto in usuario.fotos %}
+                        <div class="photo-item">
+                            <img src="{{ url_for('uploaded_file', filename=foto) }}" alt="Foto {{ loop.index }}">
+                            <a href="{{ url_for('eliminar_foto', filename=foto) }}" 
+                               class="delete-btn" 
+                               onclick="return confirm('¿Eliminar esta foto?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>¡Hazte Abonado!</strong> Solo los usuarios abonados pueden agregar fotos a su galería. 
+                    <a href="{{ url_for('registro') }}">Regístrate como abonado</a> para desbloquear esta función.
+                </div>
+                {% endif %}
+
+                <div style="margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <a href="{{ url_for('perfil') }}" class="btn btn-secondary" style="margin-left: 10px;">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelector('.photo-upload-area').addEventListener('click', function() {
+    const input = document.getElementById('foto_perfil_input');
+    if (input) input.click();
+});
+</script>
+{% endblock %}

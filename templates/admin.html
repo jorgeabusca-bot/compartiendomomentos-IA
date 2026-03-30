@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="section-title"><i class="fas fa-cog"></i> Administración de Eventos</h2>
+    
+    <div class="admin-section">
+        <h3><i class="fas fa-plus-circle"></i> Crear Nuevo Evento</h3>
+        <form method="POST" class="evento-form" enctype="multipart/form-data">
+            <input type="hidden" name="accion" value="crear">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="titulo"><i class="fas fa-heading"></i> Título del Evento</label>
+                    <input type="text" id="titulo" name="titulo" required>
+                </div>
+                <div class="form-group">
+                    <label for="lugar"><i class="fas fa-map-marker-alt"></i> Lugar</label>
+                    <input type="text" id="lugar" name="lugar" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="descripcion"><i class="fas fa-align-left"></i> Descripción</label>
+                <textarea id="descripcion" name="descripcion" rows="3" required></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fecha"><i class="fas fa-calendar"></i> Fecha</label>
+                    <input type="date" id="fecha" name="fecha" required>
+                </div>
+                <div class="form-group">
+                    <label for="hora"><i class="fas fa-clock"></i> Hora</label>
+                    <input type="time" id="hora" name="hora" required>
+                </div>
+                <div class="form-group">
+                    <label for="descuento"><i class="fas fa-percent"></i> Descuento (%)</label>
+                    <input type="number" id="descuento" name="descuento" value="0" min="0" max="100">
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-image"></i> Imagen de Portada</label>
+                <div class="photo-upload-area" onclick="document.getElementById('portada_input').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p><strong>Selecciona una imagen de portada</strong></p>
+                    <p style="font-size: 0.85rem; color: #888;">Imagen principal del evento</p>
+                    <input type="file" name="portada" id="portada_input" accept="image/*" style="display: none;" onchange="showPreview(this, 'portada_preview')">
+                    <div id="portada_preview" style="margin-top: 10px;"></div>
+                </div>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="gratis" name="gratis">
+                <label for="gratis">Evento gratuito</label>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Crear Evento</button>
+        </form>
+    </div>
+    
+    <h3 class="section-subtitle"><i class="fas fa-list"></i> Eventos Existentes</h3>
+    
+    <div class="admin-eventos-grid">
+        {% for evento in eventos %}
+        <div class="admin-evento-card">
+            <div class="admin-evento-header">
+                {% if evento.portada %}
+                    <img src="{{ url_for('uploaded_file', filename=evento.portada) }}" alt="{{ evento.titulo }}" class="admin-evento-img">
+                {% else %}
+                    <div class="admin-evento-placeholder">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                {% endif %}
+                <div class="admin-evento-overlay">
+                    <span class="evento-tipo {% if evento.gratis %}gratis{% else %}abonado{% endif %}">
+                        {% if evento.gratis %}GRATIS{% else %}CON ABONO{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="admin-evento-body">
+                <h4>{{ evento.titulo }}</h4>
+                <p class="admin-evento-desc">{{ evento.descripcion[:100] }}{% if evento.descripcion|length > 100 %}...{% endif %}</p>
+                <div class="admin-evento-info">
+                    <span><i class="fas fa-calendar"></i> {{ evento.fecha }}</span>
+                    <span><i class="fas fa-clock"></i> {{ evento.hora }}</span>
+                    <span><i class="fas fa-map-marker-alt"></i> {{ evento.lugar }}</span>
+                    <span><i class="fas fa-users"></i> {{ evento.participantes|length }}</span>
+                </div>
+                
+                <div class="admin-evento-fotos">
+                    <h5><i class="fas fa-images"></i> Fotos del Evento</h5>
+                    {% if evento.fotos and evento.fotos|length > 0 %}
+                        <div class="admin-fotos-grid">
+                            {% for foto in evento.fotos %}
+                            <div class="admin-foto-item">
+                                <img src="{{ url_for('uploaded_file', filename=foto) }}" alt="Foto">
+                                <a href="{{ url_for('eliminar_foto_evento', evento_id=evento.id, filename=foto) }}" 
+                                   class="admin-foto-delete" onclick="return confirm('¿Eliminar esta foto?')">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p style="color: var(--text-light); font-size: 0.85rem;">No hay fotos agregadas</p>
+                    {% endif %}
+                    
+                    <form action="{{ url_for('agregar_fotos_evento', evento_id=evento.id) }}" 
+                          method="POST" 
+                          enctype="multipart/form-data" 
+                          class="admin-agregar-foto">
+                        <input type="file" name="fotos" id="fotos_{{ evento.id }}" accept="image/*" multiple style="display: none;" onchange="this.form.submit()">
+                        <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('fotos_{{ evento.id }}').click()">
+                            <i class="fas fa-plus"></i> Agregar Fotos
+                        </button>
+                    </form>
+                </div>
+                
+                <form method="POST" class="eliminar-form" style="margin-top: 15px;">
+                    <input type="hidden" name="accion" value="eliminar">
+                    <input type="hidden" name="evento_id" value="{{ evento.id }}">
+                    <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('¿Eliminar este evento?')">
+                        <i class="fas fa-trash"></i> Eliminar Evento
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function showPreview(input, previewId) {
+    const preview = document.getElementById(previewId);
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = '<img src="' + e.target.result + '" style="max-width: 200px; border-radius: 10px;">';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+
+<style>
+.admin-eventos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.admin-evento-card {
+    background: var(--white);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.admin-evento-header {
+    position: relative;
+    height: 180px;
+    background: linear-gradient(135deg, var(--argentina-celeste) 0%, var(--argentina-sun) 100%);
+}
+
+.admin-evento-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-evento-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-evento-placeholder i {
+    font-size: 4rem;
+    color: rgba(255,255,255,0.3);
+}
+
+.admin-evento-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.admin-evento-body {
+    padding: 20px;
+}
+
+.admin-evento-body h4 {
+    color: var(--black);
+    margin-bottom: 10px;
+}
+
+.admin-evento-desc {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.admin-evento-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.admin-evento-info span {
+    background: #f5f5f5;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.admin-evento-info i {
+    color: var(--argentina-celeste);
+    margin-right: 5px;
+}
+
+.admin-evento-fotos {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.admin-evento-fotos h5 {
+    color: var(--black);
+    margin-bottom: 10px;
+}
+
+.admin-evento-fotos i {
+    color: var(--argentina-celeste);
+    margin-right: 5px;
+}
+
+.admin-fotos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.admin-foto-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.admin-foto-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-foto-delete {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    background: var(--error);
+    color: var(--white);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.admin-foto-item:hover .admin-foto-delete {
+    opacity: 1;
+}
+
+.admin-agregar-foto {
+    display: inline-block;
+}
+
+@media (max-width: 768px) {
+    .admin-eventos-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

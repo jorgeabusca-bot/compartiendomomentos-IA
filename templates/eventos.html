@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="section-title"><i class="fas fa-calendar-alt"></i> Todos los Eventos</h2>
+    
+    {% if eventos %}
+        <div class="eventos-grid">
+            {% for evento in eventos %}
+            <div class="evento-card">
+                {% if evento.portada %}
+                    <div class="evento-image">
+                        <img src="{{ url_for('uploaded_file', filename=evento.portada) }}" alt="{{ evento.titulo }}">
+                    </div>
+                {% endif %}
+                <div class="evento-header">
+                    <span class="evento-tipo {% if evento.gratis %}gratis{% else %}abonado{% endif %}">
+                        {% if evento.gratis %}
+                            <i class="fas fa-gift"></i> GRATIS
+                        {% else %}
+                            <i class="fas fa-star"></i> CON ABONO
+                            {% if evento.descuento_abonado > 0 %}
+                                <span class="descuento">{{ evento.descuento_abonado }}% OFF</span>
+                            {% endif %}
+                        {% endif %}
+                    </span>
+                    {% if evento.fotos and evento.fotos|length > 0 %}
+                        <span class="evento-fotos-count">
+                            <i class="fas fa-images"></i> {{ evento.fotos|length }}
+                        </span>
+                    {% endif %}
+                </div>
+                <h3>{{ evento.titulo }}</h3>
+                <p class="evento-desc">{{ evento.descripcion }}</p>
+                <div class="evento-info">
+                    <p><i class="fas fa-calendar"></i> {{ evento.fecha }}</p>
+                    <p><i class="fas fa-clock"></i> {{ evento.hora }}</p>
+                    <p><i class="fas fa-map-marker-alt"></i> {{ evento.lugar }}</p>
+                    <p><i class="fas fa-users"></i> {{ evento.participantes|length }} participantes</p>
+                </div>
+                {% if session.get('usuario') %}
+                    <form action="{{ url_for('participar_evento', evento_id=evento.id) }}" method="POST">
+                        {% if session['usuario'] in evento.participantes %}
+                            <button type="button" class="btn btn-secondary" disabled>Ya estás inscripto</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary">Participar</button>
+                        {% endif %}
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">Iniciar sesión</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <p>No hay eventos programados.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.evento-image {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+}
+
+.evento-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.evento-fotos-count {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    color: var(--white);
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.evento-fotos-count i {
+    margin-right: 5px;
+}
+
+.evento-header {
+    position: relative;
+}
+</style>
+{% endblock %}

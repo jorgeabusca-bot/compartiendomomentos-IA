@@ -1,0 +1,1177 @@
+# TUTORIAL: Crear "CompartiendoMomentos.ar"
+
+## Sitio de Vida Social para Conectar Personas
+
+---
+
+## ESTRUCTURA DEL PROYECTO
+
+```
+compartiendomomentos/
+├── app.py                  # Aplicación principal
+├── models.py              # Modelos de datos
+├── database.json          # Base de datos
+├── requirements.txt       # Dependencias
+├── static/
+│   ├── styles.css        # Estilos
+│   └── script.js         # JavaScript
+└── templates/
+    ├── base.html
+    ├── index.html
+    ├── login.html
+    ├── registro.html
+    ├── eventos.html
+    ├── asociados.html
+    ├── perfil.html
+    └── admin.html
+```
+
+---
+
+## PASO 1: INSTALAR DEPENDENCIAS
+
+Crear archivo `requirements.txt`:
+
+```txt
+Flask==2.3.0
+Flask-CORS==4.0.0
+```
+
+Instalar:
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## PASO 2: CONFIGURACIÓN (app.py)
+
+```python
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask_cors import CORS
+import json
+import os
+from datetime import datetime
+
+app = Flask(__name__)
+app.secret_key = 'compartiendomomentos2024'
+CORS(app)
+
+DB_FILE = 'database.json'
+
+def cargar_db():
+    if os.path.exists(DB_FILE):
+        with open(DB_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return {
+        'usuarios': [],
+        'eventos': [],
+        'comentarios': [],
+        'puntajes': []
+    }
+
+def guardar_db(data):
+    with open(DB_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+
+# ============================================
+# RUTAS DE PÁGINAS
+# ============================================
+
+@app.route('/')
+def index():
+    db = cargar_db()
+    eventos = db['eventos']
+    # Ordenar por fecha
+    eventos_ordenados = sorted(eventos, key=lambda x: x.get('fecha', ''))
+    
+    # Marcar eventos gratuitos o con abono
+    for evento in eventos_ordenados:
+        if evento.get('gratis', False):
+            evento['tipo'] = 'GRATIS'
+        else:
+            evento['tipo'] = 'CON ABONO'
+    
+    return render_template('index.html', 
+                         eventos=eventos_ordenados,
+                         usuario=session.get('usuario'))
+
+@app.route('/eventos')
+def eventos():
+    db = cargar_db()
+    eventos = sorted(db['eventos'], key=lambda x: x.get('fecha', ''))
+    return render_template('eventos.html', eventos=eventos)
+
+@app.route('/asociados')
+def asociados():
+    db = cargar_db()
+    # Filtrar solo usuarios activos
+    usuarios = [u for u in db['usuarios'] if u.get('activo', True)]
+    # Ordenar por rol
+    roles_orden = {'Coordinador General': 1, 'Coordinador Principal': 2, 'Coordinador': 3, 'Socio': 4}
+    usuarios_ordenados = sorted(usuarios, key=lambda x: roles_orden.get(x.get('rol', 'Socio'), 5))
+    return render_template('asociados.html', usuarios=usuarios_ordenados)
+
+@app.route('/perfil')
+def perfil():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    db = cargar_db()
+    usuario = None
+    for u in db['usuarios']:
+        if u['username'] == session['usuario']:
+            usuario = u
+            break
+    
+    return render_template('perfil.html', usuario=usuario)
+
+# ============================================
+# AUTENTICACIÓN
+# ============================================
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        db = cargar_db()
+        for usuario in db['usuarios']:
+            if usuario['username'] == username and usuario['password'] == password:
+                session['usuario'] = username
+                session['tipo'] = usuario.get('tipo', 'gratuito')
+                session['rol'] = usuario.get('rol', 'Socio')
+                flash('¡Bienvenido!', 'success')
+                return redirect(url_for('index'))
+        
+        flash('Usuario o contraseña incorrectos', 'error')
+    
+    return render_template('login.html')
+
+@app.route('/registro', methods=['GET', 'POST'])
+def registro():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        nombre = request.form['nombre']
+        tipo = request.form.get('tipo', 'gratuito')
+        
+        db = cargar_db()
+        
+        # Verificar si existe
+        for u in db['usuarios']:
+            if u['username'] == username:
+                flash('El usuario ya existe', 'error')
+                return render_template('registro.html')
+        
+        # Crear usuario
+        nuevo_usuario = {
+            'id': len(db['usuarios']) + 1,
+            'username': username,
+            'email': email,
+            'password': password,
+            'nombre': nombre,
+            'tipo': tipo,  # 'gratuito' o 'abonado'
+            'rol': 'Socio',
+            'puntaje': 0,
+            'activo': True,
+            'fecha_registro': datetime.now().strftime('%Y-%m-%d')
+        }
+        
+        db['usuarios'].append(nuevo_usuario)
+        guardar_db(db)
+        
+        flash('¡Registro exitoso! Ahora puedes iniciar sesión', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('registro.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Sesión cerrada', 'info')
+    return redirect(url_for('index'))
+
+# ============================================
+# EVENTOS (CRUD)
+# ============================================
+
+@app.route('/admin/eventos', methods=['GET', 'POST'])
+def admin_eventos():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    db = cargar_db()
+    
+    if request.method == 'POST':
+        accion = request.form.get('accion')
+        
+        if accion == 'crear':
+            nuevo_evento = {
+                'id': len(db['eventos']) + 1,
+                'titulo': request.form['titulo'],
+                'descripcion': request.form['descripcion'],
+                'fecha': request.form['fecha'],
+                'hora': request.form['hora'],
+                'lugar': request.form['lugar'],
+                'gratis': request.form.get('gratis') == 'on',
+                'descuento_abonado': float(request.form.get('descuento', 0)),
+                'creado_por': session['usuario'],
+                'participantes': []
+            }
+            db['eventos'].append(nuevo_evento)
+            guardar_db(db)
+            flash('Evento creado', 'success')
+        
+        elif accion == 'eliminar':
+            evento_id = int(request.form['evento_id'])
+            db['eventos'] = [e for e in db['eventos'] if e['id'] != evento_id]
+            guardar_db(db)
+            flash('Evento eliminado', 'info')
+    
+    return render_template('admin.html', eventos=db['eventos'])
+
+@app.route('/evento/<int:evento_id>/participar', methods=['POST'])
+def participar_evento(evento_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    db = cargar_db()
+    
+    for evento in db['eventos']:
+        if evento['id'] == evento_id:
+            if session['usuario'] not in evento['participantes']:
+                evento['participantes'].append(session['usuario'])
+                guardar_db(db)
+                flash('¡Te inscribiste al evento!', 'success')
+            else:
+                flash('Ya estás inscripto', 'warning')
+            break
+    
+    return redirect(url_for('index'))
+
+# ============================================
+# PUNTAJES Y ROLES
+# ============================================
+
+@app.route('/dar-puntaje/<int:usuario_id>', methods=['POST'])
+def dar_puntaje(usuario_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    if session.get('tipo') != 'abonado':
+        flash('Solo los socios abonados pueden dar puntaje', 'error')
+        return redirect(url_for('asociados'))
+    
+    puntaje = int(request.form['puntaje'])
+    
+    db = cargar_db()
+    
+    for usuario in db['usuarios']:
+        if usuario['id'] == usuario_id:
+            # Agregar puntaje
+            usuario['puntaje'] = usuario.get('puntaje', 0) + puntaje
+            guardar_db(db)
+            
+            # Actualizar rol según puntaje
+            if usuario['puntaje'] >= 100:
+                usuario['rol'] = 'Coordinador General'
+            elif usuario['puntaje'] >= 50:
+                usuario['rol'] = 'Coordinador Principal'
+            elif usuario['puntaje'] >= 20:
+                usuario['rol'] = 'Coordinador'
+            
+            guardar_db(db)
+            flash(f'Puntaje {puntaje} asignado a {usuario["nombre"]}', 'success')
+            break
+    
+    return redirect(url_for('asociados'))
+
+# ============================================
+# INICIO
+# ============================================
+
+if __name__ == '__main__':
+    # Crear base de datos inicial con datos de ejemplo
+    if not os.path.exists(DB_FILE):
+        db_inicial = {
+            'usuarios': [
+                {
+                    'id': 1,
+                    'username': 'admin',
+                    'email': 'admin@compartiendomomentos.com',
+                    'password': 'admin123',
+                    'nombre': 'Administrador',
+                    'tipo': 'abonado',
+                    'rol': 'Coordinador General',
+                    'puntaje': 100,
+                    'activo': True
+                },
+                {
+                    'id': 2,
+                    'username': 'maria',
+                    'email': 'maria@email.com',
+                    'password': 'maria123',
+                    'nombre': 'María García',
+                    'tipo': 'abonado',
+                    'rol': 'Coordinador Principal',
+                    'puntaje': 55,
+                    'activo': True
+                },
+                {
+                    'id': 3,
+                    'username': 'juan',
+                    'email': 'juan@email.com',
+                    'password': 'juan123',
+                    'nombre': 'Juan Pérez',
+                    'tipo': 'gratuito',
+                    'rol': 'Socio',
+                    'puntaje': 5,
+                    'activo': True
+                }
+            ],
+            'eventos': [
+                {
+                    'id': 1,
+                    'titulo': 'Cena de Integración',
+                    'descripcion': 'Una cena especial para conocer nuevas personas y compartir momentos únicos.',
+                    'fecha': '2026-04-15',
+                    'hora': '20:00',
+                    'lugar': 'Restaurante El Mirador',
+                    'gratis': False,
+                    'descuento_abonado': 20,
+                    'creado_por': 'admin',
+                    'participantes': ['maria']
+                },
+                {
+                    'id': 2,
+                    'titulo': 'Paseo por el Parque',
+                    'descripcion': 'Caminata grupal por el parque central. ¡Ven a disfrutar la naturaleza!',
+                    'fecha': '2026-04-20',
+                    'hora': '10:00',
+                    'lugar': 'Parque Central',
+                    'gratis': True,
+                    'descuento_abonado': 0,
+                    'creado_por': 'admin',
+                    'participantes': []
+                },
+                {
+                    'id': 3,
+                    'titulo': 'Taller de Cocina',
+                    'descripcion': 'Aprende a cocinar platos deliciosos en compañía.',
+                    'fecha': '2026-04-25',
+                    'hora': '15:00',
+                    'lugar': 'Centro Comunitario',
+                    'gratis': False,
+                    'descuento_abonado': 15,
+                    'creado_por': 'maria',
+                    'participantes': []
+                }
+            ],
+            'comentarios': [],
+            'puntajes': []
+        }
+        guardar_db(db_inicial)
+    
+    print("=" * 50)
+    print("CompartiendoMomentos.ar")
+    print("=" * 50)
+    app.run(debug=True, port=5000)
+```
+
+---
+
+## PASO 3: PLANTILLAS HTML
+
+### templates/base.html
+
+```html
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CompartiendoMomentos.ar{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header / Navbar -->
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-heart"></i>
+                <span>CompartiendoMomentos.ar</span>
+            </div>
+            <nav>
+                <a href="{{ url_for('index') }}">Inicio</a>
+                <a href="{{ url_for('eventos') }}">Eventos</a>
+                <a href="{{ url_for('asociados') }}">Asociados</a>
+                {% if session.get('usuario') %}
+                    <a href="{{ url_for('perfil') }}">Mi Perfil</a>
+                    {% if session.get('rol') in ['Coordinador', 'Coordinador Principal', 'Coordinador General'] %}
+                        <a href="{{ url_for('admin_eventos') }}">Administrar</a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar Sesión</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+                    <a href="{{ url_for('registro') }}" class="btn-register">Registrarse</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Mensajes Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Contenido Principal -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>CompartiendoMomentos.ar</h3>
+                    <p>Conectando personas que buscan compartir momentos especiales.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Enlaces Rápidos</h4>
+                    <a href="{{ url_for('index') }}">Inicio</a>
+                    <a href="{{ url_for('eventos') }}">Eventos</a>
+                    <a href="{{ url_for('asociados') }}">Asociados</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Contacto</h4>
+                    <p><i class="fas fa-envelope"></i> info@compartiendomomentos.ar</p>
+                    <p><i class="fas fa-phone"></i> +54 11 5555-1234</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 CompartiendoMomentos.ar - Todos los derechos reservados</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+```
+
+### templates/index.html
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Inicio - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="hero-content">
+        <h1>¡Conectá con personas que comparten tu misma pasión por la vida!</h1>
+        <p>Unite a nuestra comunidad y descubrí eventos únicos para compartir momentos inolvidables.</p>
+        {% if not session.get('usuario') %}
+            <a href="{{ url_for('registro') }}" class="btn btn-primary">Unite Gratis</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
+    <h2 class="section-title"><i class="fas fa-calendar-alt"></i> Próximos Eventos</h2>
+    
+    {% if eventos %}
+        <div class="eventos-grid">
+            {% for evento in eventos %}
+            <div class="evento-card">
+                <div class="evento-header">
+                    <span class="evento-tipo {% if evento.gratis %}gratis{% else %}abonado{% endif %}">
+                        {% if evento.gratis %}
+                            <i class="fas fa-gift"></i> GRATIS
+                        {% else %}
+                            <i class="fas fa-star"></i> CON ABONO
+                            {% if evento.descuento_abonado > 0 %}
+                                <span class="descuento">{{ evento.descuento_abonado }}% OFF</span>
+                            {% endif %}
+                        {% endif %}
+                    </span>
+                </div>
+                <h3>{{ evento.titulo }}</h3>
+                <p class="evento-desc">{{ evento.descripcion }}</p>
+                <div class="evento-info">
+                    <p><i class="fas fa-calendar"></i> {{ evento.fecha }}</p>
+                    <p><i class="fas fa-clock"></i> {{ evento.hora }}</p>
+                    <p><i class="fas fa-map-marker-alt"></i> {{ evento.lugar }}</p>
+                    <p><i class="fas fa-users"></i> {{ evento.participantes|length }} participantes</p>
+                </div>
+                {% if session.get('usuario') %}
+                    <form action="{{ url_for('participar_evento', evento_id=evento.id) }}" method="POST">
+                        {% if session['usuario'] in evento.participantes %}
+                            <button type="button" class="btn btn-secondary" disabled>Ya estás inscripto</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary">Participar</button>
+                        {% endif %}
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">Iniciar sesión para participar</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <p>No hay eventos programados. ¡Próximamente habrá novedades!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+```
+
+### templates/registro.html
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Registro - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2><i class="fas fa-user-plus"></i> Crear Cuenta</h2>
+        <form method="POST" action="{{ url_for('registro') }}">
+            <div class="form-group">
+                <label for="nombre">Nombre Completo</label>
+                <input type="text" id="nombre" name="nombre" required>
+            </div>
+            <div class="form-group">
+                <label for="username">Nombre de Usuario</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="tipo">Tipo de Suscripción</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="gratuito">Gratuito - Ver y participar sin descuento</option>
+                    <option value="abonado">Abonado Mensual - Descuentos en actividades</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Registrarse</button>
+        </form>
+        <p class="auth-link">¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión</a></p>
+    </div>
+</div>
+{% endblock %}
+```
+
+### templates/asociados.html
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Nuestros Asociados - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="section-title"><i class="fas fa-users"></i> Nuestros Asociados</h2>
+    <p class="section-subtitle">Conocé a las personas que forman parte de nuestra comunidad</p>
+    
+    {% if usuarios %}
+        <div class="asociados-grid">
+            {% for usuario in usuarios %}
+            <div class="asociado-card">
+                <div class="asociado-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="asociado-info">
+                    <h3>{{ usuario.nombre }}</h3>
+                    <span class="rol-badge {{ usuario.rol|lower|replace(' ', '-') }}">
+                        {{ usuario.rol }}
+                    </span>
+                    <p class="asociado-email">{{ usuario.email }}</p>
+                    <div class="asociado-stats">
+                        <span><i class="fas fa-star"></i> {{ usuario.puntaje }} puntos</span>
+                        <span class="{% if usuario.tipo == 'abonado' %}abonado{% else %}gratuito{% endif %}">
+                            {% if usuario.tipo == 'abonado' %}
+                                <i class="fas fa-crown"></i> Abonado
+                            {% else %}
+                                <i class="fas fa-user"></i> Gratuito
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% if session.get('tipo') == 'abonado' and session.get('usuario') != usuario.username %}
+                        <form action="{{ url_for('dar_puntaje', usuario_id=usuario.id) }}" method="POST" class="puntaje-form">
+                            <label>Dar puntaje:</label>
+                            <select name="puntaje">
+                                <option value="1">+1 punto</option>
+                                <option value="2">+2 puntos</option>
+                                <option value="5">+5 puntos</option>
+                            </select>
+                            <button type="submit" class="btn btn-small">Dar</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users-slash"></i>
+            <p>Aún no hay asociados registrados.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+```
+
+---
+
+## PASO 4: ESTILOS (static/styles.css)
+
+```css
+/* Variables */
+:root {
+    --primary: #e91e63;
+    --primary-dark: #c2185b;
+    --secondary: #9c27b0;
+    --background: #f5f5f5;
+    --white: #ffffff;
+    --text: #333333;
+    --text-light: #666666;
+    --success: #4caf50;
+    --warning: #ff9800;
+    --error: #f44336;
+}
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--background);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header */
+header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--white);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo i {
+    font-size: 1.8rem;
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+nav a {
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.3s;
+}
+
+nav a:hover {
+    opacity: 0.8;
+}
+
+.btn-register, .btn-logout {
+    background: rgba(255,255,255,0.2);
+    padding: 8px 20px;
+    border-radius: 25px;
+}
+
+/* Hero */
+.hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--white);
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+/* Botones */
+.btn {
+    display: inline-block;
+    padding: 12px 30px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--white);
+    color: var(--primary);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.btn-secondary {
+    background: #ddd;
+    color: var(--text);
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+.btn-small {
+    padding: 5px 15px;
+    font-size: 0.85rem;
+}
+
+/* Eventos Grid */
+.eventos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.evento-card {
+    background: var(--white);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.evento-card:hover {
+    transform: translateY(-5px);
+}
+
+.evento-header {
+    padding: 15px 20px;
+    background: var(--background);
+}
+
+.evento-tipo {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.evento-tipo.gratis {
+    background: var(--success);
+    color: var(--white);
+}
+
+.evento-tipo.abonado {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.descuento {
+    background: var(--warning);
+    color: var(--white);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 10px;
+    font-size: 0.75rem;
+}
+
+.evento-card h3 {
+    padding: 20px 20px 10px;
+    color: var(--text);
+}
+
+.evento-desc {
+    padding: 0 20px;
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
+.evento-info {
+    padding: 15px 20px;
+}
+
+.evento-info p {
+    margin-bottom: 8px;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.evento-info i {
+    width: 20px;
+    color: var(--primary);
+}
+
+.evento-card form, .evento-card .btn {
+    margin: 0 20px 20px;
+}
+
+/* Asociados Grid */
+.asociados-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.asociado-card {
+    background: var(--white);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.asociado-avatar {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.asociado-avatar i {
+    font-size: 3rem;
+    color: var(--white);
+}
+
+.rol-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 10px 0;
+}
+
+.rol-badge.coordinador-general {
+    background: #ffd700;
+    color: #333;
+}
+
+.rol-badge.coordinador-principal {
+    background: #c0c0c0;
+    color: #333;
+}
+
+.rol-badge.coordinador {
+    background: #cd7f32;
+    color: var(--white);
+}
+
+.rol-badge.socio {
+    background: #87ceeb;
+    color: #333;
+}
+
+.asociado-stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.asociado-stats span {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.asociado-stats span.abonado {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.puntaje-form {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.puntaje-form select, .puntaje-form button {
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+/* Formularios */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Auth Container */
+.auth-container {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.auth-card {
+    background: var(--white);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 450px;
+}
+
+.auth-card h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--primary);
+}
+
+.auth-link {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.auth-link a {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Alerts */
+.alert {
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.alert-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Section Title */
+.section-title {
+    text-align: center;
+    margin: 40px 0 10px;
+    color: var(--text);
+}
+
+.section-title i {
+    color: var(--primary);
+}
+
+.section-subtitle {
+    text-align: center;
+    color: var(--text-light);
+    margin-bottom: 30px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-light);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+/* Footer */
+footer {
+    background: #222;
+    color: var(--white);
+    padding: 50px 0 20px;
+    margin-top: 60px;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.footer-section h3, .footer-section h4 {
+    margin-bottom: 15px;
+}
+
+.footer-section a {
+    display: block;
+    color: #aaa;
+    text-decoration: none;
+    margin-bottom: 8px;
+}
+
+.footer-section a:hover {
+    color: var(--white);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #444;
+    color: #888;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 1.8rem;
+    }
+    
+    nav {
+        font-size: 0.9rem;
+        gap: 10px;
+    }
+    
+    .eventos-grid, .asociados-grid {
+        grid-template-columns: 1fr;
+    }
+}
+```
+
+---
+
+## PASO 5: EJECUTAR
+
+```bash
+pip install Flask Flask-CORS
+python app.py
+```
+
+Abrir: http://localhost:5000
+
+---
+
+## DATOS DE ACCESO
+
+| Usuario | Contraseña | Rol |
+|---------|------------|-----|
+| admin | admin123 | Coordinador General |
+| maria | maria123 | Coordinador Principal |
+| juan | juan123 | Socio Gratuito |
+
+---
+
+## EXPLICACIÓN DE ROLES
+
+| Rol | Requisitos | Descripción |
+|-----|-----------|-------------|
+| Socio | Registro | Puede ver y participar |
+| Coordinador | 20+ puntos | Puede crear eventos |
+| Coordinador Principal | 50+ puntos | Puede crear y administrar eventos |
+| Coordinador General | 100+ puntos | Acceso total al sistema |
+
+---
+
+## CÓMO FUNCIONA EL SISTEMA DE PUNTAJES
+
+1. Solo los socios **abonados** pueden dar puntaje
+2. El puntaje se otorga a otros usuarios
+3. Según el puntaje acumulado, el usuario sube de rol
+4. Los roles dan más permisos en la plataforma
+
+---
+
+FIN DEL TUTORIAL
