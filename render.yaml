@@ -19,3 +19,5 @@ services:
         value: production
       - key: SECRET_KEY
         value: compartiendomomentos2024secreto
+      - key: MONGO_URI
+        value: mongodb+srv://jorgeabusca_db_user:Lienan2005@cluster0.mxg4qcf.mongodb.net/?appName=Cluster0
