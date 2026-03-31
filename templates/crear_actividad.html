@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Actividad - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="section-title"><i class="fas fa-video"></i> Crear Nueva Actividad con Videos</h1>
+    
+    <div class="crear-actividad-container">
+        <form method="POST" enctype="multipart/form-data" class="actividad-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-section">
+                <h3><i class="fas fa-info-circle"></i> Información Básica</h3>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-heading"></i> Título de la Actividad *</label>
+                    <input type="text" name="titulo" required placeholder="Ej: Cena de Socios Primavera 2026">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-align-left"></i> Descripción *</label>
+                    <textarea name="descripcion" rows="4" required placeholder="Describe la actividad en detalle..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-file-alt"></i> Detalles Adicionales (opcional)</label>
+                    <textarea name="detalles" rows="3" placeholder="Información extra, requisitos, qué traer, etc."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar"></i> Fecha *</label>
+                        <input type="date" name="fecha" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> Hora *</label>
+                        <input type="time" name="hora" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt"></i> Lugar *</label>
+                    <input type="text" name="lugar" required placeholder="Dirección o nombre del lugar">
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3><i class="fas fa-dollar-sign"></i> Precio y Descuentos</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-dollar-sign"></i> Precio ($AR)</label>
+                        <input type="number" name="precio" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-percent"></i> Descuento Abonado (%)</label>
+                        <input type="number" name="descuento" value="0" min="0" max="100">
+                    </div>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" name="gratis" id="gratis">
+                    <label for="gratis">Actividad Gratuita</label>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3><i class="fas fa-image"></i> Imagen de Portada</h3>
+                
+                <div class="upload-area" id="portadaArea" onclick="document.getElementById('portada_input').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p><strong>Selecciona una imagen de portada</strong></p>
+                    <span>PNG, JPG o WEBP</span>
+                    <input type="file" name="portada" id="portada_input" accept="image/*" style="display: none;">
+                    <div class="preview-container" id="portadaPreview"></div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3><i class="fas fa-video"></i> Videos Reel de la Actividad</h3>
+                <p class="section-desc">Subí un video reel de presentación y todos los videos que muestren cómo será la actividad.</p>
+                
+                <div class="reels-container" id="reelsContainer">
+                    <div class="reel-upload-item" data-index="0">
+                        <div class="reel-header">
+                            <span class="reel-label"><i class="fas fa-film"></i> Reel Principal (Presentación)</span>
+                        </div>
+                        <div class="reel-upload-area" onclick="document.getElementById('reel_0').click()">
+                            <i class="fas fa-video"></i>
+                            <p>Subí el video de presentación</p>
+                            <span>MP4, MOV o WEBM</span>
+                            <input type="file" name="reel_0" id="reel_0" accept="video/*" class="reel-input" style="display: none;">
+                        </div>
+                        <input type="text" name="reel_titulo_0" placeholder="Título del video (opcional)" class="reel-titulo-input">
+                        <div class="reel-preview" id="reelPreview_0"></div>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-secondary" id="addReelBtn">
+                    <i class="fas fa-plus"></i> Agregar otro Video
+                </button>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{{ url_for('admin_actividades') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check"></i> Crear Actividad
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let reelCount = 1;
+
+document.getElementById('addReelBtn').addEventListener('click', function() {
+    const container = document.getElementById('reelsContainer');
+    const newReel = document.createElement('div');
+    newReel.className = 'reel-upload-item';
+    newReel.dataset.index = reelCount;
+    newReel.innerHTML = `
+        <div class="reel-header">
+            <span class="reel-label"><i class="fas fa-film"></i> Video ${reelCount + 1}</span>
+            <button type="button" class="btn-remove-reel" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="reel-upload-area" onclick="document.getElementById('reel_${reelCount}').click()">
+            <i class="fas fa-video"></i>
+            <p>Subí el video</p>
+            <span>MP4, MOV o WEBM</span>
+            <input type="file" name="reel_${reelCount}" id="reel_${reelCount}" accept="video/*" class="reel-input" style="display: none;">
+        </div>
+        <input type="text" name="reel_titulo_${reelCount}" placeholder="Título del video (opcional)" class="reel-titulo-input">
+        <div class="reel-preview" id="reelPreview_${reelCount}"></div>
+    `;
+    container.appendChild(newReel);
+    reelCount++;
+});
+
+document.querySelectorAll('.reel-input').forEach(input => {
+    input.addEventListener('change', function() {
+        const index = this.id.split('_')[1];
+        const preview = document.getElementById('reelPreview_' + index);
+        if (this.files && this.files[0]) {
+            const video = document.createElement('video');
+            video.src = URL.createObjectURL(this.files[0]);
+            video.controls = true;
+            video.style.maxWidth = '200px';
+            preview.innerHTML = '';
+            preview.appendChild(video);
+        }
+    });
+});
+
+document.getElementById('portada_input').addEventListener('change', function() {
+    const preview = document.getElementById('portadaPreview');
+    if (this.files && this.files[0]) {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(this.files[0]);
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '200px';
+        preview.innerHTML = '';
+        preview.appendChild(img);
+    }
+});
+
+document.getElementById('gratis').addEventListener('change', function() {
+    const precioInput = document.querySelector('input[name="precio"]');
+    const descuentoInput = document.querySelector('input[name="descuento"]');
+    if (this.checked) {
+        precioInput.value = 0;
+        precioInput.disabled = true;
+    } else {
+        precioInput.disabled = false;
+    }
+});
+</script>
+
+<style>
+.crear-actividad-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.actividad-form {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.form-section {
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+}
+
+.form-section h3 {
+    color: var(--argentina-celeste);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-desc {
+    color: var(--text-light);
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.form-group label i {
+    color: var(--argentina-celeste);
+    margin-right: 8px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="time"],
+.form-group input[type="number"],
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--argentina-celeste);
+    outline: none;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input {
+    width: 20px;
+    height: 20px;
+}
+
+.checkbox-group label {
+    margin: 0;
+}
+
+.upload-area {
+    border: 3px dashed var(--argentina-celeste);
+    border-radius: 15px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #f8f9fa;
+}
+
+.upload-area:hover {
+    background: #e8f4fc;
+    border-color: var(--argentina-sun);
+}
+
+.upload-area i {
+    font-size: 3rem;
+    color: var(--argentina-celeste);
+    margin-bottom: 15px;
+}
+
+.upload-area p {
+    margin: 10px 0 5px;
+    color: var(--text);
+}
+
+.upload-area span {
+    color: var(--text-light);
+    font-size: 0.85rem;
+}
+
+.preview-container {
+    margin-top: 20px;
+}
+
+.preview-container img {
+    max-width: 100%;
+    border-radius: 10px;
+}
+
+.reels-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.reel-upload-item {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.reel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.reel-label {
+    font-weight: 600;
+    color: var(--argentina-celeste);
+}
+
+.btn-remove-reel {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.btn-remove-reel:hover {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.reel-upload-area {
+    border: 2px dashed var(--argentina-celeste);
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: white;
+}
+
+.reel-upload-area:hover {
+    background: #e8f4fc;
+}
+
+.reel-upload-area i {
+    font-size: 2rem;
+    color: var(--argentina-celeste);
+    margin-bottom: 10px;
+}
+
+.reel-upload-area p {
+    margin: 5px 0;
+    color: var(--text);
+}
+
+.reel-upload-area span {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.reel-titulo-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    margin-top: 15px;
+    font-size: 0.95rem;
+}
+
+.reel-preview {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.reel-preview video {
+    max-width: 250px;
+    border-radius: 10px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+@media (max-width: 768px) {
+    .actividad-form {
+        padding: 20px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions a,
+    .form-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

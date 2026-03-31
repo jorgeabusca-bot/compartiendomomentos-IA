@@ -6,6 +6,12 @@
 <div class="container">
     <h1 class="section-title"><i class="fas fa-calendar-check"></i> Administración de Actividades</h1>
     
+    <div class="admin-header-buttons">
+        <a href="{{ url_for('crear_actividad') }}" class="btn btn-primary">
+            <i class="fas fa-video"></i> Crear Actividad con Videos
+        </a>
+    </div>
+    
     <div class="admin-section">
         <h3><i class="fas fa-plus-circle"></i> Crear Nueva Actividad</h3>
         <form method="POST" enctype="multipart/form-data">
@@ -136,6 +142,15 @@
 </div>
 
 <style>
+.admin-header-buttons {
+    margin-bottom: 25px;
+}
+
+.admin-header-buttons .btn {
+    padding: 15px 25px;
+    font-size: 1rem;
+}
+
 .actividades-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));

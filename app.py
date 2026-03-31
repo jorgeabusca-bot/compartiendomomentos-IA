@@ -28,7 +28,7 @@ CORS(app, origins=["https://compartiendomomentos-ia.onrender.com", "http://local
 
 # Configuración de archivos
 UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'mov', 'webm'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
@@ -266,6 +266,32 @@ def index():
     return render_template('index.html', 
                          actividades=actividades,
                          usuario=session.get('usuario'))
+
+@app.route('/actividad/<actividad_id>')
+def actividad_detalle(actividad_id):
+    try:
+        if mem_db and not actividades_col:
+            actividad = mem_db.find_one('actividades', {'_id': int(actividad_id)})
+        elif actividades_col:
+            actividad = actividades_col.find_one({'_id': ObjectId(actividad_id)})
+        else:
+            actividad = None
+        
+        if not actividad:
+            flash('Actividad no encontrada', 'error')
+            return redirect(url_for('actividades'))
+        
+        if not isinstance(actividad.get('suscritos'), list):
+            actividad['suscritos'] = []
+        if not isinstance(actividad.get('interesados'), list):
+            actividad['interesados'] = []
+        if not isinstance(actividad.get('reels'), list):
+            actividad['reels'] = []
+        
+        return render_template('actividad_detalle.html', actividad=actividad)
+    except:
+        flash('Actividad no encontrada', 'error')
+        return redirect(url_for('actividades'))
 
 @app.route('/actividades')
 def actividades():
@@ -686,7 +712,133 @@ def admin_actividades():
                          actividades=actividades_futuras, 
                          actividades_pasadas=actividades_pasadas)
 
-@app.route('/actividad/<actividad_id>/participar', methods=['POST'])
+@app.route('/actividad/<actividad_id>/interes', methods=['POST'])
+def actividad_interes(actividad_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        username = session['usuario']
+        
+        if mem_db and not actividades_col:
+            actividad = mem_db.find_one('actividades', {'_id': int(actividad_id)})
+            if actividad:
+                if 'interesados' not in actividad:
+                    actividad['interesados'] = []
+                if username not in actividad['interesados']:
+                    actividad['interesados'].append(username)
+                    mem_db.update_one('actividades', {'_id': int(actividad_id)}, {'$set': {'interesados': actividad['interesados']}})
+                    flash('Marcado como interesado', 'success')
+                else:
+                    flash('Ya marcaste interés en esta actividad', 'info')
+        elif actividades_col:
+            actividad = actividades_col.find_one({'_id': ObjectId(actividad_id)})
+            if actividad:
+                if username not in actividad.get('interesados', []):
+                    actividades_col.update_one({'_id': ObjectId(actividad_id)}, {'$push': {'interesados': username}})
+                    flash('Marcado como interesado', 'success')
+                else:
+                    flash('Ya marcaste interés en esta actividad', 'info')
+    except Exception as e:
+        flash('Error al marcar interés', 'error')
+    
+    return redirect(url_for('actividad_detalle', actividad_id=actividad_id))
+
+@app.route('/actividad/<actividad_id>/suscribirse', methods=['POST'])
+def actividad_suscribirse(actividad_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        username = session['usuario']
+        
+        if mem_db and not actividades_col:
+            actividad = mem_db.find_one('actividades', {'_id': int(actividad_id)})
+            if actividad:
+                if 'suscritos' not in actividad:
+                    actividad['suscritos'] = []
+                if username not in actividad['suscritos']:
+                    actividad['suscritos'].append(username)
+                    mem_db.update_one('actividades', {'_id': int(actividad_id)}, {'$set': {'suscritos': actividad['suscritos']}})
+                    flash('Te suscribiste a la actividad', 'success')
+                else:
+                    flash('Ya estás subscripto a esta actividad', 'info')
+        elif actividades_col:
+            actividad = actividades_col.find_one({'_id': ObjectId(actividad_id)})
+            if actividad:
+                if username not in actividad.get('suscritos', []):
+                    actividades_col.update_one({'_id': ObjectId(actividad_id)}, {'$push': {'suscritos': username}})
+                    flash('Te suscribiste a la actividad', 'success')
+                else:
+                    flash('Ya estás subscripto a esta actividad', 'info')
+    except Exception as e:
+        flash('Error al suscribirse', 'error')
+    
+    return redirect(url_for('actividad_detalle', actividad_id=actividad_id))
+
+@app.route('/crear-actividad', methods=['GET', 'POST'])
+def crear_actividad():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    if session.get('rol') not in ['Coordinador', 'Coordinador Principal', 'Coordinador General']:
+        flash('No tienes permisos para crear actividades', 'error')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        portada_filename = ''
+        if 'portada' in request.files:
+            file = request.files['portada']
+            if file and file.filename and allowed_file(file.filename):
+                portada_filename = secure_filename(f"actividad_{datetime.now().strftime('%Y%m%d%H%M%S')}.{file.filename.rsplit('.', 1)[1].lower()}")
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], portada_filename))
+        
+        reels = []
+        i = 0
+        while f'reel_{i}' in request.files:
+            reel_file = request.files[f'reel_{i}']
+            reel_titulo = request.form.get(f'reel_titulo_{i}', '')
+            if reel_file and reel_file.filename and allowed_file(reel_file.filename):
+                ext = reel_file.filename.rsplit('.', 1)[1].lower()
+                reel_filename = secure_filename(f"reel_{datetime.now().strftime('%Y%m%d%H%M%S')}_{i}.{ext}")
+                reel_file.save(os.path.join(app.config['UPLOAD_FOLDER'], reel_filename))
+                reels.append({
+                    'video': reel_filename,
+                    'titulo': reel_titulo,
+                    'thumbnail': ''
+                })
+            i += 1
+        
+        nueva_actividad = {
+            'titulo': request.form['titulo'],
+            'descripcion': request.form['descripcion'],
+            'detalles': request.form.get('detalles', ''),
+            'fecha': request.form['fecha'],
+            'hora': request.form['hora'],
+            'lugar': request.form['lugar'],
+            'gratis': request.form.get('gratis') == 'on',
+            'precio': float(request.form.get('precio', 0)),
+            'descuento_abonado': float(request.form.get('descuento', 0)),
+            'coordinador': session['usuario'],
+            'participantes': [],
+            'suscritos': [],
+            'interesados': [],
+            'portada': portada_filename,
+            'reels': reels,
+            'fotos': [],
+            'estado': 'activa',
+            'fecha_creacion': datetime.now().strftime('%Y-%m-%d')
+        }
+        
+        if mem_db and not actividades_col:
+            mem_db.insert_one('actividades', nueva_actividad)
+        elif actividades_col:
+            actividades_col.insert_one(nueva_actividad)
+        
+        flash('Actividad creada exitosamente', 'success')
+        return redirect(url_for('admin_actividades'))
+    
+    return render_template('crear_actividad.html')
 def participar_actividad(actividad_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))

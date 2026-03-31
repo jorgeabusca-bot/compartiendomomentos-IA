@@ -30,6 +30,7 @@
                     {% endif %}
                     {% if session.get('rol') in ['Coordinador', 'Coordinador Principal', 'Coordinador General'] %}
                         <a href="{{ url_for('admin_actividades') }}"><i class="fas fa-cog"></i> Admin</a>
+                        <a href="{{ url_for('crear_actividad') }}"><i class="fas fa-video"></i> Crear Actividad</a>
                     {% endif %}
                     {% if session.get('tipo') == 'abonado' %}
                         <span class="abonado-badge">ABONADO</span>

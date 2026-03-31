@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+
+{% block title %}{{ actividad.titulo }} - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="actividad-detalle">
+        {% if actividad.portada %}
+        <div class="actividad-hero" style="background-image: url('{{ url_for('uploaded_file', filename=actividad.portada) }}');">
+        {% else %}
+        <div class="actividad-hero">
+        {% endif %}
+            <div class="hero-overlay">
+                <h1>{{ actividad.titulo }}</h1>
+                <div class="hero-badges">
+                    {% if actividad.gratis %}
+                        <span class="badge badge-gratis">GRATIS</span>
+                    {% else %}
+                        <span class="badge badge-precio">$AR {{ actividad.precio }}</span>
+                    {% endif %}
+                    {% if session.get('tipo') == 'abonado' and actividad.descuento_abonado > 0 %}
+                        <span class="badge badge-descuento">{{ actividad.descuento_abonado }}% OFF</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="actividad-content">
+            <div class="actividad-info-card">
+                <h2><i class="fas fa-info-circle"></i> Detalles de la Actividad</h2>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <i class="fas fa-calendar"></i>
+                        <div>
+                            <strong>Fecha</strong>
+                            <span>{{ actividad.fecha }}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <strong>Hora</strong>
+                            <span>{{ actividad.hora }}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <strong>Lugar</strong>
+                            <span>{{ actividad.lugar }}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-user-tie"></i>
+                        <div>
+                            <strong>Coordinador</strong>
+                            <span>{{ actividad.coordinador }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actividad-descripcion">
+                    <h3><i class="fas fa-file-alt"></i> Descripción</h3>
+                    <p>{{ actividad.descripcion }}</p>
+                </div>
+
+                {% if actividad.detalles %}
+                <div class="actividad-detalles-extra">
+                    <h3><i class="fas fa-list"></i> Información Adicional</h3>
+                    <div class="detalles-content">
+                        {{ actividad.detalles|safe }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if actividad.reels and actividad.reels|length > 0 %}
+            <div class="actividad-reels">
+                <h2><i class="fas fa-video"></i> Videos de la Actividad</h2>
+                <div class="reels-container">
+                    {% for reel in actividad.reels %}
+                    <div class="reel-item">
+                        <video controls poster="{{ url_for('uploaded_file', filename=reel.thumbnail) if reel.thumbnail else '' }}">
+                            <source src="{{ url_for('uploaded_file', filename=reel.video) }}" type="video/mp4">
+                            Tu navegador no soporta video.
+                        </video>
+                        {% if reel.titulo %}
+                        <p class="reel-titulo">{{ reel.titulo }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="actividad-interesados">
+                <h2><i class="fas fa-users"></i> Comunidad</h2>
+                
+                <div class="stats-container">
+                    <div class="stat-card subscribed">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>{{ actividad.suscritos|length if actividad.suscritos else 0 }}</strong>
+                            <span>Suscriptos</span>
+                        </div>
+                    </div>
+                    <div class="stat-card interested">
+                        <i class="fas fa-star"></i>
+                        <div>
+                            <strong>{{ actividad.interesados|length if actividad.interesados else 0 }}</strong>
+                            <span>Interesados</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if actividad.suscritos and actividad.suscritos|length > 0 %}
+                <div class="usuarios-lista">
+                    <h4><i class="fas fa-user-check"></i> Suscritos</h4>
+                    <div class="usuarios-grid">
+                        {% for username in actividad.suscritos[:12] %}
+                        <a href="{{ url_for('ver_perfil', username=username) }}" class="usuario-chip subscribed">
+                            <i class="fas fa-user"></i> {{ username }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% if actividad.suscritos|length > 12 %}
+                    <p class="mas-usuarios">y {{ actividad.suscritos|length - 12 }} más...</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if actividad.interesados and actividad.interesados|length > 0 %}
+                <div class="usuarios-lista">
+                    <h4><i class="fas fa-star"></i> Interesados</h4>
+                    <div class="usuarios-grid">
+                        {% for username in actividad.interesados[:12] %}
+                        <a href="{{ url_for('ver_perfil', username=username) }}" class="usuario-chip interested">
+                            <i class="fas fa-user"></i> {{ username }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% if actividad.interesados|length > 12 %}
+                    <p class="mas-usuarios">y {{ actividad.interesados|length - 12 }} más...</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if session.get('usuario') %}
+            <div class="actividad-acciones">
+                <h3><i class="fas fa-hand-pointer"></i> ¿Te interesa esta actividad?</h3>
+                <p>Mostrá tu interés o suscribite para participar.</p>
+                
+                <div class="botones-accion">
+                    {% set ya_interesado = session.get('usuario') in (actividad.interesados or []) %}
+                    {% set ya_suscrito = session.get('usuario') in (actividad.suscritos or []) %}
+                    
+                    <form method="POST" action="{{ url_for('actividad_interes', actividad_id=actividad._id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {% if ya_interesado %}
+                        <button type="submit" class="btn btn-interested active" disabled>
+                            <i class="fas fa-star"></i> Interesado
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-interested">
+                            <i class="far fa-star"></i> Me Interesa
+                        </button>
+                        {% endif %}
+                    </form>
+                    
+                    <form method="POST" action="{{ url_for('actividad_suscribirse', actividad_id=actividad._id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {% if ya_suscrito %}
+                        <button type="submit" class="btn btn-subscribe active" disabled>
+                            <i class="fas fa-check"></i> Suscripto
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-subscribe">
+                            <i class="fas fa-bell"></i> Suscribirme
+                        </button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="actividad-acciones">
+                <p><a href="{{ url_for('login') }}">Iniciá sesión</a> para marcar tu interés o suscribirte.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="back-link">
+        <a href="{{ url_for('actividades') }}" class="btn-volver">
+            <i class="fas fa-arrow-left"></i> Volver a Actividades
+        </a>
+    </div>
+</div>
+
+<style>
+.actividad-detalle {
+    background: var(--white);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.actividad-hero {
+    height: 350px;
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--argentina-sun));
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+}
+
+.hero-overlay {
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    width: 100%;
+    padding: 30px;
+    color: white;
+}
+
+.hero-overlay h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.hero-badges {
+    display: flex;
+    gap: 10px;
+}
+
+.badge {
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.badge-gratis { background: var(--success); color: white; }
+.badge-precio { background: var(--argentina-sun); color: black; }
+.badge-descuento { background: var(--argentina-celeste); color: white; }
+
+.actividad-content {
+    padding: 30px;
+}
+
+.actividad-info-card {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.actividad-info-card h2 {
+    color: var(--argentina-celeste);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.info-item i {
+    font-size: 1.5rem;
+    color: var(--argentina-celeste);
+}
+
+.info-item strong {
+    display: block;
+    color: var(--text-light);
+    font-size: 0.8rem;
+}
+
+.info-item span {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.actividad-descripcion h3,
+.actividad-detalles-extra h3 {
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.actividad-descripcion p {
+    line-height: 1.8;
+    color: var(--text);
+}
+
+.detalles-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    line-height: 1.8;
+}
+
+.actividad-reels {
+    margin-bottom: 30px;
+}
+
+.actividad-reels h2 {
+    color: var(--argentina-celeste);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reels-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.reel-item {
+    background: #000;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.reel-item video {
+    width: 100%;
+    display: block;
+}
+
+.reel-titulo {
+    padding: 10px 15px;
+    color: white;
+    background: rgba(0,0,0,0.8);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.actividad-interesados {
+    margin-bottom: 30px;
+}
+
+.actividad-interesados h2 {
+    color: var(--argentina-celeste);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    border-radius: 15px;
+    color: white;
+}
+
+.stat-card.subscribed {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.stat-card.interested {
+    background: linear-gradient(135deg, var(--argentina-celeste), #5a9fd4);
+}
+
+.stat-card i {
+    font-size: 2rem;
+}
+
+.stat-card strong {
+    font-size: 2rem;
+    display: block;
+}
+
+.stat-card span {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.usuarios-lista {
+    margin-bottom: 20px;
+}
+
+.usuarios-lista h4 {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.usuarios-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.usuario-chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: transform 0.2s;
+}
+
+.usuario-chip:hover {
+    transform: scale(1.05);
+}
+
+.usuario-chip.subscribed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.usuario-chip.interested {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.mas-usuarios {
+    color: var(--text-light);
+    font-style: italic;
+    margin-top: 5px;
+}
+
+.actividad-acciones {
+    background: linear-gradient(135deg, var(--argentina-celeste), #5a9fd4);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    color: white;
+}
+
+.actividad-acciones h3 {
+    margin-bottom: 10px;
+}
+
+.actividad-acciones p {
+    opacity: 0.9;
+    margin-bottom: 20px;
+}
+
+.botones-accion {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-interested,
+.btn-subscribe {
+    padding: 15px 30px;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-interested {
+    background: white;
+    color: var(--argentina-sun);
+}
+
+.btn-interested:hover:not(:disabled) {
+    background: var(--argentina-sun);
+    color: white;
+}
+
+.btn-subscribe {
+    background: var(--argentina-sun);
+    color: white;
+}
+
+.btn-subscribe:hover:not(:disabled) {
+    background: white;
+    color: var(--argentina-sun);
+}
+
+.btn-interested.active,
+.btn-subscribe.active {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.btn-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 25px;
+    background: var(--argentina-celeste);
+    color: white;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+.btn-volver:hover {
+    background: #5a9fd4;
+}
+
+.back-link {
+    text-align: center;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .hero-overlay h1 {
+        font-size: 1.8rem;
+    }
+    
+    .actividad-hero {
+        height: 250px;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .reels-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .botones-accion {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
