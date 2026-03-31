@@ -1,0 +1,2 @@
+crear una pagina de crear actividades en esa pagina se le pedira al coordinador que presente con un video reel la actividad y que realice mas reels de la actividad en funsion para poder pucicitarla, mque coloque detalles escritos en la pagina de su actividad que muestre a los usuarios que se suscribieron y los que tienen interes por lo tanto la pagina de la actividad tirnr que tener dos botones el de interes y el de suscripcion 
+

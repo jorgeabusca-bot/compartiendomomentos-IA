@@ -12,7 +12,7 @@
     <header>
         <div class="container">
             <div class="logo">
-                <i class="fas fa-heart"></i>
+                <img src="{{ url_for('uploaded_file', filename='img/logo_3.jpg') }}" alt="Logo" style="height: 50px; width: auto;">
                 <span>CompartiendoMomentos.ar</span>
             </div>
             <nav>
@@ -69,7 +69,7 @@
                 <div class="footer-section">
                     <h4>Enlaces Rápidos</h4>
                     <a href="{{ url_for('index') }}">Inicio</a>
-                    <a href="{{ url_for('eventos') }}">Eventos</a>
+                    <a href="{{ url_for('actividades') }}">Eventos</a>
                     <a href="{{ url_for('asociados') }}">Asociados</a>
                 </div>
                 <div class="footer-section">

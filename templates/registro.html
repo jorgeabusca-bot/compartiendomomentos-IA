@@ -5,6 +5,7 @@
     <div class="auth-card">
         <h2><i class="fas fa-user-plus"></i> Crear Cuenta</h2>
         <form method="POST" action="{{ url_for('registro') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="nombre">Nombre Completo</label>
                 <input type="text" id="nombre" name="nombre" required>

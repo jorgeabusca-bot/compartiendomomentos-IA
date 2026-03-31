@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - CompartiendoMomentos.ar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-heart"></i>
+                <span>CompartiendoMomentos.ar</span>
+            </div>
+            <nav>
+                <a href="{{ url_for('index') }}">Inicio</a>
+                <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <div class="error-container">
+                <h1><i class="fas fa-exclamation-triangle"></i> Oops!</h1>
+                <h2>Algo salió mal</h2>
+                <p>{{ error if error else 'Ha ocurrido un error inesperado.' }}</p>
+                <a href="{{ url_for('index') }}" class="btn-primary">Volver al Inicio</a>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 CompartiendoMomentos.ar</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

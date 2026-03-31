@@ -5,6 +5,7 @@
     <div class="auth-card">
         <h2><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</h2>
         <form method="POST" action="{{ url_for('login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="username">Nombre de Usuario</label>
                 <input type="text" id="username" name="username" required autofocus>
