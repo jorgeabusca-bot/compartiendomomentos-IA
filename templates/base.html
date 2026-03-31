@@ -17,18 +17,19 @@
             </div>
             <nav>
                 <a href="{{ url_for('index') }}">Inicio</a>
-                <a href="{{ url_for('eventos') }}">Eventos</a>
+                <a href="{{ url_for('actividades') }}"><i class="fas fa-calendar-alt"></i> Actividades</a>
                 <a href="{{ url_for('social') }}"><i class="fas fa-users"></i> Social</a>
                 <a href="{{ url_for('asociados') }}">Asociados</a>
                 {% if session.get('usuario') %}
                     <a href="{{ url_for('perfil') }}">Mi Perfil</a>
+                    <a href="{{ url_for('mi_monedero') }}"><i class="fas fa-wallet"></i> Monedero</a>
                     {% if session.get('tipo') != 'abonado' %}
                         <a href="{{ url_for('suscribirse') }}" class="btn-register" style="background: var(--argentina-sun);">
                             <i class="fas fa-crown"></i> Suscribirse
                         </a>
                     {% endif %}
                     {% if session.get('rol') in ['Coordinador', 'Coordinador Principal', 'Coordinador General'] %}
-                        <a href="{{ url_for('admin_eventos') }}">Administrar</a>
+                        <a href="{{ url_for('admin_actividades') }}"><i class="fas fa-cog"></i> Admin</a>
                     {% endif %}
                     {% if session.get('tipo') == 'abonado' %}
                         <span class="abonado-badge">ABONADO</span>
@@ -74,7 +75,7 @@
                 <div class="footer-section">
                     <h4>Contacto</h4>
                     <p><i class="fas fa-envelope"></i> info@compartiendomomentos.ar</p>
-                    <p><i class="fas fa-phone"></i> +54 11 5555-1234</p>
+                    <p><i class="fas fa-phone"></i> +54 11 2291 9075</p>
                 </div>
             </div>
             <div class="footer-bottom">

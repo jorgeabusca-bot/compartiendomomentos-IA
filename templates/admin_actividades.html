@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Actividades - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="section-title"><i class="fas fa-calendar-check"></i> Administración de Actividades</h1>
+    
+    <div class="admin-section">
+        <h3><i class="fas fa-plus-circle"></i> Crear Nueva Actividad</h3>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="accion" value="crear">
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-heading"></i> Título</label>
+                    <input type="text" name="titulo" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt"></i> Lugar</label>
+                    <input type="text" name="lugar" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-align-left"></i> Descripción</label>
+                <textarea name="descripcion" rows="3" required></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Fecha</label>
+                    <input type="date" name="fecha" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-clock"></i> Hora</label>
+                    <input type="time" name="hora" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-dollar-sign"></i> Precio ($AR)</label>
+                    <input type="number" name="precio" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-percent"></i> Descuento Abonado (%)</label>
+                    <input type="number" name="descuento" value="0" min="0" max="100">
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-image"></i> Imagen de Portada</label>
+                <div class="photo-upload-area" onclick="document.getElementById('portada_input').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p><strong>Selecciona una imagen</strong></p>
+                    <input type="file" name="portada" id="portada_input" accept="image/*" style="display: none;">
+                </div>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" name="gratis" id="gratis">
+                <label for="gratis">Actividad Gratuita</label>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Crear Actividad</button>
+        </form>
+    </div>
+    
+    {% if actividades_pasadas and actividades_pasadas|length > 0 %}
+    <div class="admin-section" style="border-left: 4px solid var(--warning);">
+        <h3 style="color: #856404;"><i class="fas fa-exclamation-triangle"></i> Actividades Pasadas ({{ actividades_pasadas|length }})</h3>
+        <p style="color: #856404; margin-bottom: 15px;">Coordinador: {{ session.get('usuario') }} - Revisa las actividades que ya pasaron</p>
+        
+        <div class="actividades-pasadas-grid">
+            {% for actividad in actividades_pasadas %}
+            <div class="actividad-card pasada">
+                <h4>{{ actividad.fecha }} - {{ actividad.titulo }}</h4>
+                <p>{{ actividad.descripcion[:80] }}...</p>
+                <p><i class="fas fa-users"></i> {{ actividad.participantes|length }} participantes</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <form method="POST" style="margin-top: 20px;">
+            <input type="hidden" name="accion" value="borrar_pasados">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar TODAS las actividades pasadas?')">
+                <i class="fas fa-trash"></i> Borrar todos los eventos pasados
+            </button>
+        </form>
+    </div>
+    {% endif %}
+    
+    <h2 class="section-subtitle"><i class="fas fa-list"></i> Actividades Próximas ({{ actividades|length }})</h2>
+    
+    {% if actividades %}
+    <div class="actividades-grid">
+        {% for actividad in actividades %}
+        <div class="actividad-card">
+            <div class="actividad-header">
+                {% if actividad.portada %}
+                    <img src="{{ url_for('uploaded_file', filename=actividad.portada) }}" alt="{{ actividad.titulo }}">
+                {% else %}
+                    <div class="actividad-placeholder">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                {% endif %}
+                <div class="actividad-badge">
+                    {% if actividad.gratis %}
+                        <span class="badge gratis">GRATIS</span>
+                    {% else %}
+                        <span class="badge precio">$AR {{ actividad.precio }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="actividad-body">
+                <h3>{{ actividad.titulo }}</h3>
+                <p class="desc">{{ actividad.descripcion[:100] }}...</p>
+                <div class="actividad-meta">
+                    <span><i class="fas fa-calendar"></i> {{ actividad.fecha }}</span>
+                    <span><i class="fas fa-clock"></i> {{ actividad.hora }}</span>
+                    <span><i class="fas fa-map-marker-alt"></i> {{ actividad.lugar }}</span>
+                    <span><i class="fas fa-users"></i> {{ actividad.participantes|length }}</span>
+                </div>
+                <div class="actividad-coordinador">
+                    <i class="fas fa-user-tie"></i> Coordinador: {{ actividad.coordinador }}
+                </div>
+                <form method="POST" class="actividad-actions">
+                    <input type="hidden" name="accion" value="eliminar">
+                    <input type="hidden" name="actividad_id" value="{{ actividad._id }}">
+                    <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('¿Eliminar esta actividad?')">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-calendar-times"></i>
+        <p>No hay actividades próximas</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.actividades-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+    margin: 25px 0;
+}
+
+.actividad-card {
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.actividad-card.pasada {
+    opacity: 0.7;
+    border: 2px dashed var(--warning);
+}
+
+.actividad-header {
+    position: relative;
+    height: 180px;
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--argentina-sun));
+}
+
+.actividad-header img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.actividad-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.actividad-placeholder i {
+    font-size: 4rem;
+    color: rgba(255,255,255,0.5);
+}
+
+.actividad-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge.gratis { background: var(--success); color: white; }
+.badge.precio { background: var(--argentina-sun); color: black; }
+
+.actividad-body {
+    padding: 20px;
+}
+
+.actividad-body h3 {
+    color: var(--black);
+    margin-bottom: 10px;
+}
+
+.actividad-body .desc {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.actividad-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.actividad-meta span {
+    background: #f5f5f5;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.actividad-meta span i {
+    color: var(--argentina-celeste);
+    margin-right: 5px;
+}
+
+.actividad-coordinador {
+    padding: 10px;
+    background: #fafafa;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text);
+    margin-bottom: 15px;
+}
+
+.actividad-coordinador i {
+    color: var(--argentina-celeste);
+    margin-right: 8px;
+}
+
+.actividad-actions {
+    text-align: right;
+}
+
+.actividades-pasadas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+    margin: 15px 0;
+}
+
+@media (max-width: 768px) {
+    .actividades-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

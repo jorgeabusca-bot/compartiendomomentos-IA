@@ -4,11 +4,11 @@
 <div class="hero">
     <div class="hero-content">
         <h1>¡Conectá con personas que comparten tu misma pasión por la vida!</h1>
-        <p>Unite a nuestra comunidad y descubrí eventos únicos para compartir momentos inolvidables.</p>
+        <p>Unite a nuestra comunidad y descubrí actividades únicas para compartir momentos inolvidables.</p>
         {% if not session.get('usuario') %}
             <a href="{{ url_for('registro') }}" class="btn btn-primary">Unite Gratis</a>
         {% else %}
-            <a href="{{ url_for('social') }}" class="btn btn-primary" style="background: var(--gold); color: var(--black);">
+            <a href="{{ url_for('social') }}" class="btn btn-primary" style="background: var(--argentina-sun); color: var(--black);">
                 <i class="fas fa-users"></i> Conocer Gente
             </a>
         {% endif %}
@@ -16,52 +16,54 @@
 </div>
 
 <div class="container">
-    <h2 class="section-title"><i class="fas fa-calendar-alt"></i> Próximos Eventos</h2>
+    <h2 class="section-title"><i class="fas fa-calendar-alt"></i> Próximas Actividades</h2>
     
-    {% if eventos %}
+    {% if actividades %}
         <div class="eventos-grid">
-            {% for evento in eventos %}
+            {% for actividad in actividades %}
             <div class="evento-card">
-                {% if evento.portada %}
+                {% if actividad.portada %}
                     <div class="evento-image">
-                        <img src="{{ url_for('uploaded_file', filename=evento.portada) }}" alt="{{ evento.titulo }}">
+                        <img src="{{ url_for('uploaded_file', filename=actividad.portada) }}" alt="{{ actividad.titulo }}">
                     </div>
                 {% endif %}
                 <div class="evento-header">
-                    <span class="evento-tipo {% if evento.gratis %}gratis{% else %}abonado{% endif %}">
-                        {% if evento.gratis %}
+                    <span class="evento-tipo {% if actividad.gratis %}gratis{% else %}abonado{% endif %}">
+                        {% if actividad.gratis %}
                             <i class="fas fa-gift"></i> GRATIS
                         {% else %}
-                            <i class="fas fa-star"></i> CON ABONO
-                            {% if evento.descuento_abonado > 0 %}
-                                <span class="descuento">{{ evento.descuento_abonado }}% OFF</span>
+                            <i class="fas fa-ticket-alt"></i> $AR {{ actividad.precio }}
+                            {% if actividad.descuento_abonado > 0 %}
+                                <span class="descuento">{{ actividad.descuento_abonado }}% OFF</span>
                             {% endif %}
                         {% endif %}
                     </span>
-                    {% if evento.fotos and evento.fotos|length > 0 %}
-                        <span class="evento-fotos-count">
-                            <i class="fas fa-images"></i> {{ evento.fotos|length }}
-                        </span>
-                    {% endif %}
                 </div>
-                <h3>{{ evento.titulo }}</h3>
-                <p class="evento-desc">{{ evento.descripcion }}</p>
+                <h3>{{ actividad.titulo }}</h3>
+                <p class="evento-desc">{{ actividad.descripcion }}</p>
                 <div class="evento-info">
-                    <p><i class="fas fa-calendar"></i> {{ evento.fecha }}</p>
-                    <p><i class="fas fa-clock"></i> {{ evento.hora }}</p>
-                    <p><i class="fas fa-map-marker-alt"></i> {{ evento.lugar }}</p>
-                    <p><i class="fas fa-users"></i> {{ evento.participantes|length }} participantes</p>
+                    <p><i class="fas fa-calendar"></i> {{ actividad.fecha }}</p>
+                    <p><i class="fas fa-clock"></i> {{ actividad.hora }}</p>
+                    <p><i class="fas fa-map-marker-alt"></i> {{ actividad.lugar }}</p>
+                    <p><i class="fas fa-users"></i> {{ actividad.participantes|length }} inscriptos</p>
+                    <p><i class="fas fa-user-tie"></i> Coord: {{ actividad.coordinador }}</p>
                 </div>
                 {% if session.get('usuario') %}
-                    <form action="{{ url_for('participar_evento', evento_id=evento.id) }}" method="POST">
-                        {% if session['usuario'] in evento.participantes %}
-                            <button type="button" class="btn btn-secondary" disabled>Ya estás inscripto</button>
-                        {% else %}
-                            <button type="submit" class="btn btn-primary">Participar</button>
-                        {% endif %}
-                    </form>
+                    {% if session['usuario'] in actividad.participantes %}
+                        <button type="button" class="btn btn-secondary" disabled>
+                            <i class="fas fa-check"></i> Ya estás inscripto
+                        </button>
+                    {% else %}
+                        <form action="{{ url_for('participar_actividad', actividad_id=actividad._id) }}" method="POST">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i> Inscribirse
+                            </button>
+                        </form>
+                    {% endif %}
                 {% else %}
-                    <a href="{{ url_for('login') }}" class="btn btn-primary">Iniciar sesión para participar</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar sesión para participar
+                    </a>
                 {% endif %}
             </div>
             {% endfor %}
@@ -69,9 +71,27 @@
     {% else %}
         <div class="empty-state">
             <i class="fas fa-calendar-times"></i>
-            <p>No hay eventos programados. ¡Próximamente habrá novedades!</p>
+            <p>No hay actividades programadas. ¡Próximamente habrá novedades!</p>
         </div>
     {% endif %}
+    
+    <div class="cta-section">
+        <div class="cta-content">
+            <h2>¿Querés ver perfiles de otros socios?</h2>
+            <p>Hacete Abonado y desbloqueá todas las funcionalidades</p>
+            {% if session.get('usuario') %}
+                {% if session.get('tipo') != 'abonado' %}
+                    <a href="{{ url_for('suscribirse') }}" class="btn btn-primary btn-large">
+                        <i class="fas fa-crown"></i> Suscribirme por $2.500/mes
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{{ url_for('registro') }}" class="btn btn-primary btn-large">
+                    <i class="fas fa-user-plus"></i> Registrarme
+                </a>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
 <style>
@@ -87,23 +107,22 @@
     object-fit: cover;
 }
 
-.evento-fotos-count {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0,0,0,0.7);
-    color: var(--white);
-    padding: 5px 10px;
+.cta-section {
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--white));
     border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 50px;
+    text-align: center;
+    margin: 50px 0;
 }
 
-.evento-fotos-count i {
-    margin-right: 5px;
+.cta-content h2 {
+    color: var(--black);
+    margin-bottom: 10px;
 }
 
-.evento-header {
-    position: relative;
+.cta-content p {
+    color: var(--text-light);
+    margin-bottom: 25px;
 }
 </style>
 {% endblock %}

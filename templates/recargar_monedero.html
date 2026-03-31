@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}Recargar Monedero - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="section-title"><i class="fas fa-plus-circle"></i> Recargar Monedero</h1>
+    <p class="section-subtitle">Elegí el monto a recargar y pagá con MercadoPago</p>
+    
+    <div class="recarga-container">
+        <div class="recarga-card">
+            <div class="saldo-actual">
+                <h3>Saldo Actual</h3>
+                <div class="saldo-valor">$AR {{ usuario.get('monedero', 0) }}</div>
+            </div>
+            
+            <form method="POST">
+                <div class="montos-presets">
+                    <h4><i class="fas fa-coins"></i> Seleccioná un monto</h4>
+                    
+                    <div class="montos-grid">
+                        <label class="monto-option">
+                            <input type="radio" name="monto" value="500">
+                            <span class="monto-box">$500</span>
+                        </label>
+                        <label class="monto-option">
+                            <input type="radio" name="monto" value="1000">
+                            <span class="monto-box">$1.000</span>
+                        </label>
+                        <label class="monto-option">
+                            <input type="radio" name="monto" value="2000">
+                            <span class="monto-box">$2.000</span>
+                        </label>
+                        <label class="monto-option">
+                            <input type="radio" name="monto" value="3000" checked>
+                            <span class="monto-box destacado">$3.000</span>
+                        </label>
+                        <label class="monto-option">
+                            <input type="radio" name="monto" value="5000">
+                            <span class="monto-box">$5.000</span>
+                        </label>
+                        <label class="monto-option">
+                            <input type="radio" name="monto" value="10000">
+                            <span class="monto-box">$10.000</span>
+                        </label>
+                    </div>
+                    
+                    <div class="monto-personalizado">
+                        <label for="monto_personalizado">O ingresá un monto personalizado:</label>
+                        <input type="number" id="monto_personalizado" name="monto" min="500" max="50000" placeholder="Monto en AR$">
+                    </div>
+                </div>
+                
+                <div class="pago-info">
+                    <div class="pago-metodo">
+                        <i class="fas fa-shield-alt"></i>
+                        <div>
+                            <h5>Pago 100% seguro</h5>
+                            <p>Procesado por MercadoPago</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block btn-large">
+                    <i class="fab fa-cc-mastercard"></i>
+                    <i class="fab fa-cc-visa"></i>
+                    Pagar con MercadoPago
+                </button>
+            </form>
+            
+            <div class="recarga-nota">
+                <i class="fas fa-info-circle"></i>
+                <p>La recarga se acreditará instantáneamente en tu monedero después de confirmar el pago.</p>
+            </div>
+        </div>
+        
+        <div class="beneficios-recarga">
+            <h3><i class="fas fa-gift"></i> Beneficios del Monedero</h3>
+            <ul>
+                <li><i class="fas fa-check"></i> Pagos instantáneos</li>
+                <li><i class="fas fa-check"></i> Sin comisión adicional</li>
+                <li><i class="fas fa-check"></i> Disponible 24/7</li>
+                <li><i class="fas fa-check"></i> Tus datos están seguros</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.recarga-container {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.recarga-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.saldo-actual {
+    text-align: center;
+    padding-bottom: 30px;
+    border-bottom: 2px solid #eee;
+    margin-bottom: 30px;
+}
+
+.saldo-actual h3 {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    font-weight: 400;
+    margin-bottom: 10px;
+}
+
+.saldo-valor {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--argentina-celeste);
+}
+
+.montos-presets h4 {
+    margin-bottom: 20px;
+    color: var(--black);
+}
+
+.montos-presets h4 i {
+    color: var(--argentina-sun);
+    margin-right: 8px;
+}
+
+.montos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.monto-option {
+    cursor: pointer;
+}
+
+.monto-option input {
+    display: none;
+}
+
+.monto-box {
+    display: block;
+    padding: 20px;
+    text-align: center;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.monto-option input:checked + .monto-box {
+    border-color: var(--argentina-celeste);
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--white));
+    color: var(--black);
+}
+
+.monto-box.destacado {
+    border-color: var(--argentina-sun);
+    background: linear-gradient(135deg, var(--argentina-sun), var(--white));
+}
+
+.monto-personalizado {
+    margin-top: 20px;
+}
+
+.monto-personalizado label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-light);
+}
+
+.monto-personalizado input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.monto-personalizado input:focus {
+    border-color: var(--argentina-celeste);
+    outline: none;
+}
+
+.pago-info {
+    margin: 30px 0;
+    padding: 20px;
+    background: #f5f5f5;
+    border-radius: 12px;
+}
+
+.pago-metodo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.pago-metodo i {
+    font-size: 2rem;
+    color: var(--argentina-celeste);
+}
+
+.pago-metodo h5 {
+    color: var(--black);
+    margin-bottom: 5px;
+}
+
+.pago-metodo p {
+    color: var(--text-light);
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.recarga-nota {
+    margin-top: 20px;
+    padding: 15px;
+    background: #e8f4fc;
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.recarga-nota i {
+    color: var(--argentina-celeste);
+    margin-top: 3px;
+}
+
+.recarga-nota p {
+    color: var(--text);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.beneficios-recarga {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    height: fit-content;
+}
+
+.beneficios-recarga h3 {
+    margin-bottom: 20px;
+    color: var(--black);
+}
+
+.beneficios-recarga h3 i {
+    color: var(--argentina-sun);
+    margin-right: 8px;
+}
+
+.beneficios-recarga ul {
+    list-style: none;
+    padding: 0;
+}
+
+.beneficios-recarga li {
+    padding: 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.beneficios-recarga li i {
+    color: var(--success);
+}
+
+@media (max-width: 992px) {
+    .recarga-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .montos-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .recarga-card {
+        padding: 25px;
+    }
+    
+    .montos-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .saldo-valor {
+        font-size: 2rem;
+    }
+}
+</style>
+
+<script>
+document.querySelectorAll('input[name="monto"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('.monto-option input').forEach(r => r.checked = false);
+        this.checked = true;
+        document.getElementById('monto_personalizado').value = '';
+    });
+});
+
+document.getElementById('monto_personalizado').addEventListener('input', function() {
+    document.querySelectorAll('input[name="monto"]').forEach(r => r.checked = false);
+    if (this.value) {
+        document.querySelector('input[name="monto"][value="' + this.value + '"]').checked = false;
+    }
+});
+</script>
+{% endblock %}
