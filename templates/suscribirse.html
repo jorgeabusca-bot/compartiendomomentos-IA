@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Suscribirse - CompartiendoMomentos.ar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="section-title"><i class="fas fa-crown"></i> ¡Hazte Abonado!</h1>
+    <p class="section-subtitle">Desbloquea todas las funcionalidades premium</p>
+    
+    <div class="planes-container">
+        <div class="plan-card {% if usuario.tipo == 'gratuito' %}plan-destacado{% endif %}">
+            <div class="plan-header">
+                <h3><i class="fas fa-user"></i> Socio Gratuito</h3>
+                <div class="plan-precio">$0 <span>/mes</span></div>
+            </div>
+            <div class="plan-features">
+                <ul>
+                    <li><i class="fas fa-check"></i> Ver eventos</li>
+                    <li><i class="fas fa-check"></i> Participar en eventos gratuitos</li>
+                    <li><i class="fas fa-check"></i> Perfil básico</li>
+                    <li class="desactivado"><i class="fas fa-times"></i> Ver perfiles de otros usuarios</li>
+                    <li class="desactivado"><i class="fas fa-times"></i> Galería de fotos</li>
+                    <li class="desactivado"><i class="fas fa-times"></i> Subir fotos personales</li>
+                    <li class="desactivado"><i class="fas fa-times"></i> Dar puntaje a otros</li>
+                </ul>
+            </div>
+            <div class="plan-footer">
+                {% if usuario.tipo == 'gratuito' %}
+                    <button class="btn btn-secondary" disabled>Tu plan actual</button>
+                {% else %}
+                    <form action="{{ url_for('cancelar_suscripcion') }}" method="POST">
+                        <button type="submit" class="btn btn-secondary" onclick="return confirm('¿Estás seguro de cancelar tu suscripción?')">Cambiar a Gratis</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="plan-card {% if usuario.tipo == 'abonado' %}plan-destacado{% endif %}">
+            <div class="plan-badge">MÁS POPULAR</div>
+            <div class="plan-header">
+                <h3><i class="fas fa-crown"></i> Socio Abonado</h3>
+                <div class="plan-precio">$AR 2.500 <span>/mes</span></div>
+            </div>
+            <div class="plan-features">
+                <ul>
+                    <li><i class="fas fa-check"></i> Todo lo del plan gratuito</li>
+                    <li><i class="fas fa-check"></i> <strong>Ver perfiles completos</strong></li>
+                    <li><i class="fas fa-check"></i> <strong>Galería de fotos personal</strong></li>
+                    <li><i class="fas fa-check"></i> <strong>Subir tus propias fotos</strong></li>
+                    <li><i class="fas fa-check"></i> <strong>Espiar otros perfiles</strong></li>
+                    <li><i class="fas fa-check"></i> <strong>Dar puntaje a otros socios</strong></li>
+                    <li><i class="fas fa-check"></i> <strong>Participar en eventos con descuento</strong></li>
+                </ul>
+            </div>
+            <div class="plan-footer">
+                {% if usuario.tipo == 'abonado' %}
+                    <button class="btn btn-secondary" disabled>Eres Abonado</button>
+                {% else %}
+                    <form action="{{ url_for('suscribirse') }}" method="POST">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <i class="fas fa-rocket"></i> Suscribirme Ahora
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="faq-section">
+        <h2><i class="fas fa-question-circle"></i> Preguntas Frecuentes</h2>
+        <div class="faq-grid">
+            <div class="faq-item">
+                <h4>¿Cómo funciona la suscripción?</h4>
+                <p>Al suscribirte, desbloqueas inmediatamente todas las funcionalidades premium de tu cuenta.</p>
+            </div>
+            <div class="faq-item">
+                <h4>¿Puedo cancelar cuando quiera?</h4>
+                <p>Sí, puedes cancelar tu suscripción en cualquier momento desde tu perfil.</p>
+            </div>
+            <div class="faq-item">
+                <h4>¿Qué incluye el perfil completo?</h4>
+                <p>Podrás ver las fotos y descripciones de todos los demás asociados.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.planes-container {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 30px 0;
+}
+
+.plan-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 0;
+    width: 350px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+    border: 2px solid #eee;
+    transition: transform 0.3s;
+}
+
+.plan-card:hover {
+    transform: translateY(-10px);
+}
+
+.plan-card.plan-destacado {
+    border: 3px solid var(--argentina-celeste);
+    transform: scale(1.05);
+}
+
+.plan-card.plan-destacado:hover {
+    transform: scale(1.05) translateY(-10px);
+}
+
+.plan-badge {
+    position: absolute;
+    top: 15px;
+    right: -35px;
+    background: var(--argentina-sun);
+    color: var(--black);
+    padding: 5px 40px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    transform: rotate(45deg);
+}
+
+.plan-header {
+    background: linear-gradient(135deg, var(--argentina-celeste), var(--white));
+    padding: 25px;
+    text-align: center;
+}
+
+.plan-header h3 {
+    color: var(--black);
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+
+.plan-header h3 i {
+    color: var(--argentina-sun);
+    margin-right: 8px;
+}
+
+.plan-precio {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--black);
+}
+
+.plan-precio span {
+    font-size: 1rem;
+    color: var(--text-light);
+    font-weight: 400;
+}
+
+.plan-features {
+    padding: 25px;
+}
+
+.plan-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.plan-features li {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.plan-features li:last-child {
+    border-bottom: none;
+}
+
+.plan-features li i {
+    color: var(--success);
+}
+
+.plan-features li.desactivado {
+    color: var(--text-light);
+    opacity: 0.6;
+}
+
+.plan-features li.desactivado i {
+    color: var(--error);
+}
+
+.plan-footer {
+    padding: 20px 25px;
+    text-align: center;
+    background: #fafafa;
+}
+
+.faq-section {
+    margin-top: 60px;
+    padding: 40px;
+    background: var(--white);
+    border-radius: 20px;
+}
+
+.faq-section h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--black);
+}
+
+.faq-section h2 i {
+    color: var(--argentina-celeste);
+    margin-right: 10px;
+}
+
+.faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.faq-item {
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 15px;
+}
+
+.faq-item h4 {
+    color: var(--argentina-celeste);
+    margin-bottom: 10px;
+}
+
+.faq-item p {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .planes-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .plan-card {
+        width: 100%;
+        max-width: 350px;
+    }
+    
+    .plan-card.plan-destacado {
+        transform: scale(1);
+    }
+    
+    .plan-card.plan-destacado:hover {
+        transform: translateY(-10px);
+    }
+}
+</style>
+{% endblock %}

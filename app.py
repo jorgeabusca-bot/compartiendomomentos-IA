@@ -307,6 +307,50 @@ def eliminar_foto(filename):
     return redirect(url_for('editar_perfil'))
 
 # ============================================
+# SUSCRIPCIÓN / UPGRADE
+# ============================================
+
+@app.route('/suscribirse', methods=['GET', 'POST'])
+def suscribirse():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    db = cargar_db()
+    usuario = None
+    usuario_idx = None
+    for idx, u in enumerate(db['usuarios']):
+        if u['username'] == session['usuario']:
+            usuario = u
+            usuario_idx = idx
+            break
+    
+    if request.method == 'POST':
+        if usuario:
+            db['usuarios'][usuario_idx]['tipo'] = 'abonado'
+            session['tipo'] = 'abonado'
+            guardar_db(db)
+            flash('¡Felicidades! Ahora eres usuario Abonado', 'success')
+            return redirect(url_for('perfil'))
+    
+    return render_template('suscribirse.html', usuario=usuario)
+
+@app.route('/cancelar-suscripcion', methods=['POST'])
+def cancelar_suscripcion():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    db = cargar_db()
+    for idx, u in enumerate(db['usuarios']):
+        if u['username'] == session['usuario']:
+            db['usuarios'][idx]['tipo'] = 'gratuito'
+            session['tipo'] = 'gratuito'
+            guardar_db(db)
+            flash('Suscripción cancelada', 'info')
+            break
+    
+    return redirect(url_for('perfil'))
+
+# ============================================
 # EVENTOS
 # ============================================
 

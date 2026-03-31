@@ -22,6 +22,11 @@
                 <a href="{{ url_for('asociados') }}">Asociados</a>
                 {% if session.get('usuario') %}
                     <a href="{{ url_for('perfil') }}">Mi Perfil</a>
+                    {% if session.get('tipo') != 'abonado' %}
+                        <a href="{{ url_for('suscribirse') }}" class="btn-register" style="background: var(--argentina-sun);">
+                            <i class="fas fa-crown"></i> Suscribirse
+                        </a>
+                    {% endif %}
                     {% if session.get('rol') in ['Coordinador', 'Coordinador Principal', 'Coordinador General'] %}
                         <a href="{{ url_for('admin_eventos') }}">Administrar</a>
                     {% endif %}

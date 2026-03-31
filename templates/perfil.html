@@ -40,6 +40,11 @@
                         <span class="abonado-badge">ABONADO</span>
                     {% else %}
                         <span class="gratuito-badge">GRATIS</span>
+                        {% if es_propio %}
+                            <a href="{{ url_for('suscribirse') }}" class="btn btn-primary btn-small" style="background: var(--argentina-sun); color: var(--black);">
+                                <i class="fas fa-crown"></i> Hacerme Abonado
+                            </a>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
