@@ -29,51 +29,70 @@
                 </div>
 
                 <div class="form-group">
-                    <label><i class="fas fa-camera"></i> Foto de Perfil</label>
-                    <div class="photo-upload-area">
+                    <label><i class="fas fa-camera"></i> Cambiar Foto de Perfil</label>
+                    <div class="photo-upload-area" onclick="document.getElementById('foto_perfil_input').click()">
                         {% if usuario.foto_perfil %}
                         <img src="{{ url_for('uploaded_file', filename=usuario.foto_perfil) }}" 
                              alt="Foto de perfil actual" 
                              style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
-                        <p>Ya tienes una foto de perfil. Selecciona otra para cambiarla.</p>
                         {% else %}
                         <i class="fas fa-cloud-upload-alt"></i>
                         {% endif %}
-                        <p><strong>Selecciona una imagen</strong></p>
-                        <input type="file" name="foto_perfil" accept="image/*" style="display: none;" id="foto_perfil_input">
+                        <p><strong>{% if usuario.foto_perfil %}Cambiar{% else %}Seleccionar{% endif %} foto de perfil</strong></p>
+                        <p style="font-size: 0.85rem; color: #888;">JPG, PNG, GIF, WebP</p>
+                        <input type="file" name="foto_perfil" id="foto_perfil_input" accept="image/*" style="display: none;" onchange="showPreview(this, 'portada_preview')">
+                        <div id="portada_preview" style="margin-top: 10px;"></div>
                     </div>
                 </div>
 
                 {% if usuario.tipo == 'abonado' %}
                 <div class="form-group">
-                    <label><i class="fas fa-images"></i> Fotos de la Galería (solo abonados)</label>
+                    <label><i class="fas fa-images"></i> Agregar Fotos a la Galería</label>
                     <div class="photo-upload-area" onclick="document.getElementById('fotos_input').click()">
                         <i class="fas fa-cloud-upload-alt"></i>
                         <p><strong>Selecciona múltiples fotos</strong></p>
                         <p style="font-size: 0.85rem; color: #888;">Comparte fotos de salidas, eventos o momentos especiales</p>
                         <input type="file" name="fotos" id="fotos_input" accept="image/*" multiple style="display: none;">
                     </div>
-                    
-                    {% if usuario.fotos and usuario.fotos|length > 0 %}
-                    <div class="photo-gallery">
+                    <p style="margin-top: 10px; color: var(--argentina-celeste); font-size: 0.85rem;">
+                        <i class="fas fa-info-circle"></i> Después de agregar fotos, podrás agregar una descripción a cada una
+                    </p>
+                </div>
+                
+                {% if usuario.fotos and usuario.fotos|length > 0 %}
+                <div class="fotos-editar-section">
+                    <h4><i class="fas fa-edit"></i> Mis Fotos - Editar Descripciones</h4>
+                    <div class="fotos-grid-editar">
                         {% for foto in usuario.fotos %}
-                        <div class="photo-item">
-                            <img src="{{ url_for('uploaded_file', filename=foto) }}" alt="Foto {{ loop.index }}">
-                            <a href="{{ url_for('eliminar_foto', filename=foto) }}" 
-                               class="delete-btn" 
-                               onclick="return confirm('¿Eliminar esta foto?')">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                        {% set foto_nombre = foto.nombre if foto is mapping else foto %}
+                        {% set foto_desc = foto.descripcion if foto is mapping else '' %}
+                        <div class="foto-editar-card">
+                            <div class="foto-editar-image">
+                                <img src="{{ url_for('uploaded_file', filename=foto_nombre) }}" alt="Foto {{ loop.index }}">
+                            </div>
+                            <form action="{{ url_for('modificar_foto', foto_idx=loop.index0) }}" method="POST" class="foto-editar-form">
+                                <input type="text" name="descripcion" placeholder="Agregar descripción..." value="{{ foto_desc }}">
+                                <div class="foto-editar-actions">
+                                    <button type="submit" class="btn btn-primary btn-small">
+                                        <i class="fas fa-save"></i> Guardar
+                                    </button>
+                                    <a href="{{ url_for('eliminar_foto', foto_idx=loop.index0) }}" 
+                                       class="btn btn-danger btn-small"
+                                       onclick="return confirm('¿Eliminar esta foto?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </form>
                         </div>
                         {% endfor %}
                     </div>
-                    {% endif %}
                 </div>
+                {% endif %}
                 {% else %}
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> 
+                    <i class="fas fa-crown"></i> 
                     <strong>¡Hazte Abonado!</strong> Solo los usuarios abonados pueden agregar fotos a su galería. 
-                    <a href="{{ url_for('registro') }}">Regístrate como abonado</a> para desbloquear esta función.
+                    <a href="{{ url_for('suscribirse') }}">Suscribirme ahora</a>
                 </div>
                 {% endif %}
 
@@ -91,9 +110,99 @@
 </div>
 
 <script>
-document.querySelector('.photo-upload-area').addEventListener('click', function() {
-    const input = document.getElementById('foto_perfil_input');
-    if (input) input.click();
+document.querySelector('.photo-upload-area').addEventListener('click', function(e) {
+    if (e.target.tagName !== 'INPUT') {
+        const input = document.getElementById('foto_perfil_input');
+        if (input) input.click();
+    }
 });
+
+function showPreview(input, previewId) {
+    const preview = document.getElementById(previewId);
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = '<img src="' + e.target.result + '" style="max-width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
 </script>
+
+<style>
+.fotos-editar-section {
+    margin: 30px 0;
+    padding: 25px;
+    background: #fafafa;
+    border-radius: 16px;
+}
+
+.fotos-editar-section h4 {
+    color: var(--black);
+    margin-bottom: 20px;
+}
+
+.fotos-editar-section h4 i {
+    color: var(--argentina-celeste);
+    margin-right: 8px;
+}
+
+.fotos-grid-editar {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.foto-editar-card {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+}
+
+.foto-editar-image {
+    width: 100%;
+    height: 150px;
+    overflow: hidden;
+}
+
+.foto-editar-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.foto-editar-form {
+    padding: 15px;
+}
+
+.foto-editar-form input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.foto-editar-form input[type="text"]:focus {
+    border-color: var(--argentina-celeste);
+    outline: none;
+}
+
+.foto-editar-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.foto-editar-actions .btn {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .fotos-grid-editar {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}

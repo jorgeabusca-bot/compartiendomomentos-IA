@@ -65,8 +65,10 @@ def serve_upload(filename):
 @app.route('/')
 def index():
     db = cargar_db()
-    eventos = db['eventos']
-    eventos_ordenados = sorted(eventos, key=lambda x: x.get('fecha', ''))
+    hoy = datetime.now().strftime('%Y-%m-%d')
+    
+    eventos_futuros = [e for e in db['eventos'] if e.get('fecha', '') >= hoy]
+    eventos_ordenados = sorted(eventos_futuros, key=lambda x: x.get('fecha', ''))
     
     for evento in eventos_ordenados:
         if evento.get('gratis', False):
@@ -81,7 +83,9 @@ def index():
 @app.route('/eventos')
 def eventos():
     db = cargar_db()
-    eventos = sorted(db['eventos'], key=lambda x: x.get('fecha', ''))
+    hoy = datetime.now().strftime('%Y-%m-%d')
+    eventos_futuros = [e for e in db['eventos'] if e.get('fecha', '') >= hoy]
+    eventos = sorted(eventos_futuros, key=lambda x: x.get('fecha', ''))
     return render_template('eventos.html', eventos=eventos)
 
 @app.route('/asociados')
@@ -266,20 +270,30 @@ def editar_perfil():
         if 'foto_perfil' in request.files:
             file = request.files['foto_perfil']
             if file and file.filename and allowed_file(file.filename):
+                if db['usuarios'][usuario_idx].get('foto_perfil'):
+                    old_file = os.path.join(app.config['UPLOAD_FOLDER'], db['usuarios'][usuario_idx]['foto_perfil'])
+                    if os.path.exists(old_file):
+                        os.remove(old_file)
                 filename = secure_filename(f"perfil_{session['usuario']}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{file.filename.rsplit('.', 1)[1].lower()}")
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 db['usuarios'][usuario_idx]['foto_perfil'] = filename
         
         if 'fotos' in request.files:
             files = request.files.getlist('fotos')
-            for file in files:
+            foto_descripciones = request.form.getlist('foto_descripcion')
+            for i, file in enumerate(files):
                 if file and file.filename and allowed_file(file.filename):
                     foto_id = len(db['usuarios'][usuario_idx].get('fotos', [])) + 1
                     filename = secure_filename(f"foto_{session['usuario']}_{foto_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{file.filename.rsplit('.', 1)[1].lower()}")
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     if 'fotos' not in db['usuarios'][usuario_idx]:
                         db['usuarios'][usuario_idx]['fotos'] = []
-                    db['usuarios'][usuario_idx]['fotos'].append(filename)
+                    desc = foto_descripciones[i] if i < len(foto_descripciones) else ''
+                    db['usuarios'][usuario_idx]['fotos'].append({
+                        'nombre': filename,
+                        'descripcion': desc,
+                        'fecha': datetime.now().strftime('%Y-%m-%d')
+                    })
         
         guardar_db(db)
         flash('Perfil actualizado correctamente', 'success')
@@ -287,21 +301,48 @@ def editar_perfil():
     
     return render_template('editar_perfil.html', usuario=usuario)
 
-@app.route('/eliminar-foto/<filename>')
-def eliminar_foto(filename):
+@app.route('/eliminar-foto/<int:foto_idx>')
+def eliminar_foto(foto_idx):
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
     db = cargar_db()
     for u in db['usuarios']:
         if u['username'] == session['usuario']:
-            if 'fotos' in u and filename in u['fotos']:
-                u['fotos'].remove(filename)
+            if 'fotos' in u and foto_idx < len(u['fotos']):
+                foto = u['fotos'][foto_idx]
+                filename = foto['nombre'] if isinstance(foto, dict) else foto
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 if os.path.exists(filepath):
                     os.remove(filepath)
+                del u['fotos'][foto_idx]
                 guardar_db(db)
                 flash('Foto eliminada', 'success')
+            break
+    
+    return redirect(url_for('editar_perfil'))
+
+@app.route('/modificar-foto/<int:foto_idx>', methods=['POST'])
+def modificar_foto(foto_idx):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    db = cargar_db()
+    nueva_descripcion = request.form.get('descripcion', '')
+    
+    for u in db['usuarios']:
+        if u['username'] == session['usuario']:
+            if 'fotos' in u and foto_idx < len(u['fotos']):
+                if isinstance(u['fotos'][foto_idx], dict):
+                    u['fotos'][foto_idx]['descripcion'] = nueva_descripcion
+                else:
+                    u['fotos'][foto_idx] = {
+                        'nombre': u['fotos'][foto_idx],
+                        'descripcion': nueva_descripcion,
+                        'fecha': datetime.now().strftime('%Y-%m-%d')
+                    }
+                guardar_db(db)
+                flash('Descripción actualizada', 'success')
             break
     
     return redirect(url_for('editar_perfil'))
@@ -360,6 +401,7 @@ def admin_eventos():
         return redirect(url_for('login'))
     
     db = cargar_db()
+    hoy = datetime.now().strftime('%Y-%m-%d')
     
     if request.method == 'POST':
         accion = request.form.get('accion')
@@ -395,8 +437,31 @@ def admin_eventos():
             db['eventos'] = [e for e in db['eventos'] if e['id'] != evento_id]
             guardar_db(db)
             flash('Evento eliminado', 'info')
+        
+        elif accion == 'borrar_pasados':
+            eventos_pasados = [e for e in db['eventos'] if e.get('fecha', '') < hoy]
+            if eventos_pasados:
+                for ep in eventos_pasados:
+                    if ep.get('portada'):
+                        filepath = os.path.join(app.config['UPLOAD_FOLDER'], ep['portada'])
+                        if os.path.exists(filepath):
+                            os.remove(filepath)
+                    if ep.get('fotos'):
+                        for foto in ep['fotos']:
+                            fotofile = foto['nombre'] if isinstance(foto, dict) else foto
+                            filepath = os.path.join(app.config['UPLOAD_FOLDER'], fotofile)
+                            if os.path.exists(filepath):
+                                os.remove(filepath)
+                db['eventos'] = [e for e in db['eventos'] if e.get('fecha', '') >= hoy]
+                guardar_db(db)
+                flash(f'{len(eventos_pasados)} evento(s) pasado(s) eliminado(s)', 'info')
+            else:
+                flash('No hay eventos pasados para eliminar', 'info')
     
-    return render_template('admin.html', eventos=db['eventos'])
+    eventos_futuros = [e for e in db['eventos'] if e.get('fecha', '') >= hoy]
+    eventos_pasados = [e for e in db['eventos'] if e.get('fecha', '') < hoy]
+    
+    return render_template('admin.html', eventos=eventos_futuros, eventos_pasados=eventos_pasados)
 
 @app.route('/admin/evento/<int:evento_id>/agregar-fotos', methods=['POST'])
 def agregar_fotos_evento(evento_id):

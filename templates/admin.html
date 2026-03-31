@@ -54,8 +54,54 @@
         </form>
     </div>
     
-    <h3 class="section-subtitle"><i class="fas fa-list"></i> Eventos Existentes</h3>
+    {% if eventos_pasados and eventos_pasados|length > 0 %}
+    <div class="admin-section" style="background: linear-gradient(135deg, #fff3cd, #fff); border-left: 4px solid var(--warning);">
+        <h3 style="color: #856404;"><i class="fas fa-exclamation-triangle"></i> Eventos Pasados ({{ eventos_pasados|length }})</h3>
+        <p style="color: #856404; margin-bottom: 15px;">Los siguientes eventos ya pasaron su fecha. ¿Querés modificarlos o eliminarlos?</p>
+        <div class="admin-eventos-pasados-grid">
+            {% for evento in eventos_pasados %}
+            <div class="admin-evento-card admin-evento-pasado">
+                <div class="admin-evento-header">
+                    {% if evento.portada %}
+                        <img src="{{ url_for('uploaded_file', filename=evento.portada) }}" alt="{{ evento.titulo }}" class="admin-evento-img" style="filter: grayscale(50%);">
+                    {% else %}
+                        <div class="admin-evento-placeholder">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    {% endif %}
+                    <div class="admin-evento-overlay">
+                        <span class="evento-tipo pasado">PASADO</span>
+                    </div>
+                </div>
+                <div class="admin-evento-body">
+                    <h4>{{ evento.fecha }} - {{ evento.titulo }}</h4>
+                    <p class="admin-evento-desc">{{ evento.descripcion[:80] }}...</p>
+                    <div class="admin-evento-info">
+                        <span><i class="fas fa-clock"></i> {{ evento.hora }}</span>
+                        <span><i class="fas fa-map-marker-alt"></i> {{ evento.lugar }}</span>
+                        <span><i class="fas fa-users"></i> {{ evento.participantes|length }}</span>
+                    </div>
+                    <div class="pasado-actions">
+                        <a href="{{ url_for('admin_eventos') }}" class="btn btn-secondary btn-small">
+                            <i class="fas fa-edit"></i> Modificar
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <form method="POST" style="margin-top: 20px;">
+            <input type="hidden" name="accion" value="borrar_pasados">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar TODOS los eventos pasados?')">
+                <i class="fas fa-trash"></i> Borrar todos los eventos pasados
+            </button>
+        </form>
+    </div>
+    {% endif %}
     
+    <h3 class="section-subtitle"><i class="fas fa-list"></i> Eventos Próximos ({{ eventos|length }})</h3>
+    
+    {% if eventos %}
     <div class="admin-eventos-grid">
         {% for evento in eventos %}
         <div class="admin-evento-card">
@@ -281,8 +327,34 @@ function showPreview(input, previewId) {
     display: inline-block;
 }
 
+.admin-eventos-pasados-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.admin-evento-pasado {
+    opacity: 0.85;
+    border: 2px dashed var(--warning);
+}
+
+.admin-evento-pasado .admin-evento-header {
+    filter: grayscale(30%);
+}
+
+.evento-tipo.pasado {
+    background: var(--warning);
+    color: var(--black);
+}
+
+.pasado-actions {
+    margin-top: 10px;
+}
+
 @media (max-width: 768px) {
-    .admin-eventos-grid {
+    .admin-eventos-grid,
+    .admin-eventos-pasados-grid {
         grid-template-columns: 1fr;
     }
 }

@@ -77,23 +77,30 @@
             {% endif %}
 
             {% if puede_ver_detalles or es_propio %}
-            <div class="carousel-section">
+            <div class="fotos-section">
                 <h4><i class="fas fa-camera-retro"></i> Galería de Fotos</h4>
                 
                 {% if usuario.fotos and usuario.fotos|length > 0 %}
-                <div class="carousel">
-                    <div class="carousel-slides">
-                        {% for foto in usuario.fotos %}
-                        <div class="carousel-slide">
-                            <img src="{{ url_for('uploaded_file', filename=foto) }}" alt="Foto {{ loop.index }}">
+                <div class="fotos-grid">
+                    {% for foto in usuario.fotos %}
+                    {% set foto_nombre = foto.nombre if foto is mapping else foto %}
+                    {% set foto_desc = foto.descripcion if foto is mapping else '' %}
+                    <div class="foto-card">
+                        <div class="foto-card-image">
+                            <img src="{{ url_for('uploaded_file', filename=foto_nombre) }}" alt="Foto {{ loop.index }}">
                         </div>
-                        {% endfor %}
+                        <div class="foto-card-body">
+                            {% if foto_desc %}
+                                <p class="foto-desc">{{ foto_desc }}</p>
+                            {% else %}
+                                <p class="foto-desc foto-no-desc">Sin descripción</p>
+                            {% endif %}
+                            {% if foto is mapping and foto.fecha %}
+                                <p class="foto-fecha"><i class="fas fa-calendar"></i> {{ foto.fecha }}</p>
+                            {% endif %}
+                        </div>
                     </div>
-                    {% if usuario.fotos|length > 1 %}
-                    <button class="carousel-nav prev"><i class="fas fa-chevron-left"></i></button>
-                    <button class="carousel-nav next"><i class="fas fa-chevron-right"></i></button>
-                    <div class="carousel-dots"></div>
-                    {% endif %}
+                    {% endfor %}
                 </div>
                 {% else %}
                 <div class="no-photos">
@@ -115,4 +122,90 @@
     </div>
     {% endif %}
 </div>
+
+<style>
+.fotos-section {
+    margin-top: 25px;
+}
+
+.fotos-section h4 {
+    color: var(--black);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fotos-section h4 i {
+    color: var(--argentina-celeste);
+}
+
+.fotos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.foto-card {
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s;
+}
+
+.foto-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+}
+
+.foto-card-image {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+}
+
+.foto-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.foto-card:hover .foto-card-image img {
+    transform: scale(1.05);
+}
+
+.foto-card-body {
+    padding: 15px;
+}
+
+.foto-desc {
+    color: var(--text);
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.foto-no-desc {
+    color: var(--text-light);
+    font-style: italic;
+}
+
+.foto-fecha {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.foto-fecha i {
+    color: var(--argentina-celeste);
+    margin-right: 5px;
+}
+
+@media (max-width: 768px) {
+    .fotos-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}
